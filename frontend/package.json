@@ -12,8 +12,7 @@
     "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
     "preview": "vite preview",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build",
-    "prepare": "husky install"
+    "build-storybook": "storybook build"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
@@ -33,6 +32,7 @@
     "react-hook-form": "^7.68.0",
     "react-router-dom": "^7.10.1",
     "tailwind-merge": "^3.4.0",
+    "yup": "^1.7.1",
     "zustand": "^5.0.9"
   },
   "devDependencies": {
