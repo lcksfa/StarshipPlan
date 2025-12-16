@@ -35,32 +35,36 @@ export function TaskList() {
   const weeklyTasks = tasks.filter((t) => t.type === "weekly")
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2 text-primary">
-            <Calendar className="w-5 h-5" />
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+          <CardTitle className="flex items-center gap-2 text-primary text-base sm:text-lg">
+            <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
             每日任务
           </CardTitle>
-          <Button onClick={() => setIsDialogOpen(true)} size="sm" className="bg-primary hover:bg-primary/90">
+          <Button
+            onClick={() => setIsDialogOpen(true)}
+            size="sm"
+            className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
+          >
             <Plus className="w-4 h-4 mr-2" />
             添加任务
           </Button>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-2 sm:space-y-3">
           {dailyTasks.map((task) => (
             <div
               key={task.id}
-              className="flex items-center gap-3 p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
+              className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
             >
               <Checkbox
                 checked={task.completed}
                 onCheckedChange={() => toggleTask(task.id)}
-                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
                 <p
-                  className={`font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
+                  className={`font-medium text-sm sm:text-base ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
                 >
                   {task.title}
                 </p>
@@ -73,7 +77,7 @@ export function TaskList() {
               </div>
               <Badge
                 variant="secondary"
-                className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1"
+                className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 flex-shrink-0 text-xs sm:text-sm"
               >
                 <Sparkles className="w-3 h-3" />+{task.starCoins}
               </Badge>
@@ -84,32 +88,32 @@ export function TaskList() {
 
       <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-primary">
-            <Repeat className="w-5 h-5" />
+          <CardTitle className="flex items-center gap-2 text-primary text-base sm:text-lg">
+            <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
             每周任务
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-2 sm:space-y-3">
           {weeklyTasks.map((task) => (
             <div
               key={task.id}
-              className="flex items-center gap-3 p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
+              className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
             >
               <Checkbox
                 checked={task.completed}
                 onCheckedChange={() => toggleTask(task.id)}
-                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
               />
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <p
-                  className={`font-medium ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
+                  className={`font-medium text-sm sm:text-base ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
                 >
                   {task.title}
                 </p>
               </div>
               <Badge
                 variant="secondary"
-                className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1"
+                className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 flex-shrink-0 text-xs sm:text-sm"
               >
                 <Sparkles className="w-3 h-3" />+{task.starCoins}
               </Badge>
