@@ -1,0 +1,10 @@
+{
+  "id": "approval_1765881689244_e2bj6z6um",
+  "title": "StarshipPlan 任务分解文档审批",
+  "filePath": ".spec-workflow/specs/starship-plan/tasks.md",
+  "type": "document",
+  "status": "pending",
+  "createdAt": "2025-12-16T10:41:29.244Z",
+  "category": "spec",
+  "categoryName": "starship-plan"
+}

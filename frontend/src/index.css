@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 太空主题基础样式 */
+@layer base {
+  body {
+    @apply bg-space-black text-white min-h-screen;
+    font-family: 'Orbitron', 'Space Mono', monospace;
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* 滚动条样式 */
+  ::-webkit-scrollbar {
+    @apply w-2;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-space-dark;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-galaxy-blue rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-galaxy-cyan;
+  }
+}
+
+/* 组件样式 */
+@layer components {
+  /* 科技感按钮 */
+  .tech-button {
+    @apply relative overflow-hidden bg-gradient-to-r from-galaxy-blue to-galaxy-purple text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 border border-galaxy-cyan;
+    box-shadow: 0 4px 15px rgba(0, 102, 204, 0.3);
+  }
+
+  .tech-button:hover {
+    @apply transform scale-105;
+    box-shadow: 0 6px 25px rgba(0, 102, 204, 0.5);
+  }
+
+  .tech-button::before {
+    @apply absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 transition-opacity duration-300;
+    content: '';
+    transform: translateX(-100%);
+  }
+
+  .tech-button:hover::before {
+    @apply opacity-20;
+    animation: shimmer 1.5s infinite;
+  }
+
+  /* 星舰卡片 */
+  .space-card {
+    @apply bg-gradient-to-br from-space-dark via-space-blue to-space-purple rounded-xl p-6 border border-galaxy-blue/30 backdrop-blur-sm;
+    box-shadow: 0 8px 32px rgba(0, 102, 204, 0.2);
+  }
+
+  /* 全息投影效果 */
+  .hologram {
+    @apply relative;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+  }
+
+  /* 能量条 */
+  .energy-bar {
+    @apply relative h-4 bg-space-dark rounded-full overflow-hidden;
+  }
+
+  .energy-bar::before {
+    @apply absolute inset-0 bg-gradient-to-r from-galaxy-cyan to-galaxy-blue;
+    content: '';
+    animation: energy-flow 2s linear infinite;
+  }
+
+  /* 数据面板 */
+  .data-panel {
+    @apply bg-black/50 border border-galaxy-blue/30 rounded-lg p-4 font-mono text-sm;
+  }
+
+  /* 星星背景 */
+  .stars-bg {
+    background-image:
+      radial-gradient(2px 2px at 20px 30px, white, transparent),
+      radial-gradient(2px 2px at 40px 70px, white, transparent),
+      radial-gradient(1px 1px at 50px 50px, white, transparent),
+      radial-gradient(1px 1px at 80px 10px, white, transparent),
+      radial-gradient(2px 2px at 130px 80px, white, transparent);
+    background-size: 200px 200px;
+    animation: stars-twinkle 10s infinite;
+  }
+}
+
+/* 动画 */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes energy-flow {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes stars-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* 工具类 */
+@layer utilities {
+  .text-glow {
+    text-shadow:
+      0 0 10px currentColor,
+      0 0 20px currentColor,
+      0 0 30px currentColor;
+  }
+
+  .border-glow {
+    box-shadow:
+      0 0 10px rgba(0, 255, 255, 0.5),
+      inset 0 0 10px rgba(0, 255, 255, 0.1);
+  }
+
+  .scan-line {
+    @apply relative overflow-hidden;
+  }
+
+  .scan-line::after {
+    @apply absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-galaxy-cyan to-transparent;
+    content: '';
+    animation: scan 3s linear infinite;
+  }
+
+  @keyframes scan {
+    0% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(100%);
+    }
+  }
+}

@@ -1,0 +1,189 @@
+{
+  "project_info": {
+    "name": "StarshipPlan",
+    "summary": "Starship Plan - 小学生习惯管理系统",
+    "timestamp": "2025-12-16 19:12:06",
+    "init_timestamp": "2025-12-16T19:12:06.000Z"
+  },
+  "modules": [
+    {
+      "path": "frontend",
+      "name": "Frontend 模块",
+      "type": "React Application",
+      "language": "TypeScript",
+      "frameworks": ["React", "Vite", "Tailwind CSS"],
+      "status": "initialized",
+      "entry_file": "src/main.tsx",
+      "config_files": [
+        "vite.config.ts",
+        "tsconfig.json",
+        "package.json",
+        "tailwind.config.js",
+        "eslint.config.js"
+      ],
+      "test_files": [],
+      "missing_components": [
+        "src/components/",
+        "src/pages/",
+        "src/hooks/",
+        "src/stores/",
+        "src/types/",
+        "src/utils/"
+      ],
+      "interface_status": "not_implemented",
+      "coverage": {
+        "total_files": 12,
+        "scanned_files": 8,
+        "coverage_percentage": 66.7
+      }
+    },
+    {
+      "path": "backend",
+      "name": "Backend 模块",
+      "type": "API Server",
+      "language": "TypeScript",
+      "frameworks": ["Express", "Socket.io", "Prisma"],
+      "status": "initialized",
+      "entry_file": "src/server.ts",
+      "config_files": [
+        "tsconfig.json",
+        "package.json"
+      ],
+      "test_files": [],
+      "missing_components": [
+        "src/routes/",
+        "src/middleware/",
+        "src/services/",
+        "src/models/",
+        "prisma/"
+      ],
+      "interface_status": "partially_implemented",
+      "coverage": {
+        "total_files": 5,
+        "scanned_files": 5,
+        "coverage_percentage": 100
+      }
+    },
+    {
+      "path": "mobile",
+      "name": "Mobile 模块",
+      "type": "Capacitor App",
+      "language": "JavaScript",
+      "frameworks": ["Capacitor"],
+      "status": "not_created",
+      "entry_file": null,
+      "config_files": [
+        "../capacitor.config.ts"
+      ],
+      "test_files": [],
+      "missing_components": [
+        "mobile/"
+      ],
+      "interface_status": "not_implemented",
+      "coverage": {
+        "total_files": 0,
+        "scanned_files": 0,
+        "coverage_percentage": 0
+      }
+    }
+  ],
+  "project_structure": {
+    "total_directories": 8,
+    "total_files": 25,
+    "scanned_files": 15,
+    "overall_coverage": 60.0,
+    "ignored_patterns": [
+      "node_modules/**",
+      "dist/**",
+      "build/**",
+      ".next/**",
+      "__pycache__/**",
+      "*.log",
+      "*.lock",
+      "*.bin"
+    ],
+    "ignored_directories": [
+      "frontend/node_modules",
+      "backend/node_modules"
+    ]
+  },
+  "scan_results": {
+    "scan_duration": "medium",
+    "scan_intensity": "moderate",
+    "truncated": false,
+    "reason_for_truncation": null,
+    "missing_files": [
+      "frontend/src/components/**",
+      "backend/src/routes/**",
+      "prisma/schema.prisma",
+      ".env.example",
+      "README 详细说明"
+    ]
+  },
+  "documentation_status": {
+    "root_claude_md": "created",
+    "module_claude_md_files": [
+      "frontend/CLAUDE.md - created",
+      "backend/CLAUDE.md - created"
+    ],
+    "total_docs_created": 3,
+    "total_docs_updated": 0
+  },
+  "gaps_and_next_steps": {
+    "critical_gaps": [
+      "Prisma 数据库模型未实现",
+      "React 组件架构未开始",
+      "API 路由和业务逻辑缺失",
+      "认证系统未实现"
+    ],
+    "high_priority_files": [
+      "backend/prisma/schema.prisma",
+      "frontend/src/App.tsx (需要重构)",
+      "backend/src/routes/auth.ts",
+      "frontend/src/stores/userStore.ts"
+    ],
+    "recommended_next_scans": [
+      "backend/src/ 目录完整扫描",
+      "frontend/src/ 目录组件结构扫描",
+      "创建并扫描 mobile/ 目录",
+      "检查 .spec-workflow/ 中的需求文档"
+    ],
+    "development_focus": [
+      "1. 配置 Prisma 数据库",
+      "2. 实现用户认证系统",
+      "3. 开发基础 UI 组件",
+      "4. 集成前后端 API"
+    ]
+  },
+  "technologies_identified": {
+    "frontend": {
+      "framework": "React 19",
+      "language": "TypeScript",
+      "bundler": "Vite 7",
+      "styling": "Tailwind CSS 4",
+      "animation": "Framer Motion 12",
+      "state": "Zustand",
+      "routing": "React Router 7"
+    },
+    "backend": {
+      "framework": "Express",
+      "language": "TypeScript",
+      "database": "SQLite + Prisma ORM",
+      "realtime": "Socket.io",
+      "auth": "JWT + bcryptjs",
+      "logging": "Winston"
+    },
+    "mobile": {
+      "framework": "Capacitor",
+      "target": "Android",
+      "pwa": true
+    }
+  },
+  "project_health": {
+    "maturity": "early_development",
+    "complexity": "medium",
+    "maintenance_difficulty": "low",
+    "deployment_complexity": "low",
+    "team_size_suitable": "1-3 developers"
+  }
+}

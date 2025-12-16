@@ -1,0 +1,36 @@
+{
+  "name": "starship-plan",
+  "version": "1.0.0",
+  "description": "Starship Plan - 小学生习惯管理系统",
+  "main": "README.md",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "cd frontend && npm run lint",
+    "type-check": "cd frontend && npm run type-check"
+  },
+  "keywords": [
+    "habits",
+    "children",
+    "gaming",
+    "education",
+    "family"
+  ],
+  "author": "Starship Plan Team",
+  "license": "MIT",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "devDependencies": {
+    "@capacitor/cli": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}

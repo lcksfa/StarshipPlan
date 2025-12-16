@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Production
+dist/
+build/
+
+# Testing
+coverage/
+
+# Storybook
+storybook-static/
+
+# Logs
+*.log
+
+# Package manager
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Vite
+.vite/
+
+# Environment
+.env*
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
