@@ -623,6 +623,7 @@ export class TaskService {
     // 标记今日是否已完成
     return todayTasks.map(task => ({
       ...task,
+      completed: task.completions.length > 0, // 添加completed属性供前端使用
       isCompletedToday: task.completions.length > 0,
       todayCompletion: task.completions[0] || null,
     }));
@@ -679,6 +680,7 @@ export class TaskService {
     // 标记本周是否已完成
     return weeklyTasks.map(task => ({
       ...task,
+      completed: task.completions.length > 0, // 添加completed属性供前端使用
       isCompletedThisWeek: task.completions.length > 0,
       weekCompletion: task.completions[0] || null,
     }));

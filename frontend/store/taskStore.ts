@@ -318,9 +318,18 @@ export const useTaskStore = create<TaskState>()(
       },
 
       addTaskCompletion: (completion) => {
-        set((state) => ({
-          taskCompletions: [completion, ...state.taskCompletions]
-        }));
+        set((state) => {
+          // 更新任务完成状态
+          const updateTaskCompleted = (task: any) =>
+            task.id === completion.taskId ? { ...task, completed: true } : task;
+
+          return {
+            taskCompletions: [completion, ...state.taskCompletions],
+            tasks: state.tasks.map(updateTaskCompleted),
+            todayTasks: state.todayTasks.map(updateTaskCompleted),
+            weeklyTasks: state.weeklyTasks.map(updateTaskCompleted),
+          };
+        });
       },
 
       updateTaskStats: (stats) => {

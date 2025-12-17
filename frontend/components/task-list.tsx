@@ -33,6 +33,13 @@ export function TaskList() {
         return
       }
 
+      // 检查任务是否已完成
+      const isCompleted = task.completed || task.isCompletedToday || task.isCompletedThisWeek
+      if (isCompleted) {
+        toast.info("该任务今天已经完成了！")
+        return
+      }
+
       const completion = await completeTask(taskId)
       if (completion) {
         // 刷新任务列表和积分数据
@@ -46,9 +53,20 @@ export function TaskList() {
       } else {
         toast.error("完成任务失败，请重试")
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("完成任务失败:", error)
-      toast.error("完成任务失败，请重试")
+
+      // 处理特定错误消息
+      if (error.message === "今天已经完成过这个任务了") {
+        toast.info("该任务今天已经完成了！")
+        // 刷新任务列表以同步状态
+        await Promise.all([
+          fetchTodayTasks(),
+          fetchWeeklyTasks()
+        ])
+      } else {
+        toast.error("完成任务失败，请重试")
+      }
     }
   }
 
@@ -86,13 +104,13 @@ export function TaskList() {
                 className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
               >
                 <Checkbox
-                  checked={task.completed}
+                  checked={task.completed || task.isCompletedToday}
                   onCheckedChange={() => toggleTask(task.id)}
                   className="data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
                   <p
-                    className={`font-medium text-sm sm:text-base ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
+                    className={`font-medium text-sm sm:text-base ${(task.completed || task.isCompletedToday) ? "line-through text-muted-foreground" : "text-foreground"}`}
                   >
                     {task.title}
                   </p>
@@ -139,13 +157,13 @@ export function TaskList() {
                 className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
               >
                 <Checkbox
-                  checked={task.completed}
+                  checked={task.completed || task.isCompletedThisWeek}
                   onCheckedChange={() => toggleTask(task.id)}
                   className="data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
                 />
                 <div className="flex-1 min-w-0">
                   <p
-                    className={`font-medium text-sm sm:text-base ${task.completed ? "line-through text-muted-foreground" : "text-foreground"}`}
+                    className={`font-medium text-sm sm:text-base ${(task.completed || task.isCompletedThisWeek) ? "line-through text-muted-foreground" : "text-foreground"}`}
                   >
                     {task.title}
                   </p>

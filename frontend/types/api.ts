@@ -45,6 +45,11 @@ export interface Task {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  // 运行时属性（由后端计算）
+  completed?: boolean;
+  isCompletedToday?: boolean;
+  todayCompletion?: any;
+  completions?: any[];
 }
 
 export interface TaskCompletion {
