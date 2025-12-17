@@ -71,9 +71,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
                 className="h-12 text-base bg-background/50 border-border focus:border-primary"
                 required
               />
-              <p className="text-xs text-muted-foreground">
-                💡 输入"parent"登录家长账号，其他名字登录儿童账号
-              </p>
+
             </div>
             <Button
               type="submit"
