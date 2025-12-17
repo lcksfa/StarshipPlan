@@ -5,7 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Calendar, Repeat, Sparkles, Plus, Zap } from "lucide-react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Calendar, Repeat, Sparkles, Plus, Zap, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { AddTaskDialog } from "./add-task-dialog"
 import { useTodayTasks, useWeeklyTasks, useTaskStore } from "@/store/taskStore"
@@ -19,7 +30,7 @@ export function TaskList() {
   // 使用真实的 store 数据
   const dailyTasks = useTodayTasks()
   const weeklyTasks = useWeeklyTasks()
-  const { fetchTodayTasks, fetchWeeklyTasks, completeTask, uncompleteTask, fetchTasks, isLoading, error } = useTaskStore()
+  const { fetchTodayTasks, fetchWeeklyTasks, completeTask, uncompleteTask, fetchTasks, deleteTask, isLoading, error } = useTaskStore()
   const currentUser = useCurrentUser()
   const { fetchUserPoints } = usePointsStore()
 
@@ -28,6 +39,31 @@ export function TaskList() {
     fetchTodayTasks()
     fetchWeeklyTasks()
   }, [fetchTodayTasks, fetchWeeklyTasks])
+
+  const deleteTaskHandler = async (taskId: string) => {
+    try {
+      const task = [...dailyTasks, ...weeklyTasks].find(t => t.id === taskId)
+      if (!task) {
+        toast.error("任务不存在")
+        return
+      }
+
+      const success = await deleteTask(taskId)
+      if (success) {
+        // 刷新任务列表
+        await Promise.all([
+          fetchTodayTasks(),
+          fetchWeeklyTasks()
+        ])
+        toast.success(`任务"${task.title}"已删除`)
+      } else {
+        toast.error("删除任务失败，请重试")
+      }
+    } catch (error: any) {
+      console.error("删除任务失败:", error)
+      toast.error("删除失败，请重试")
+    }
+  }
 
   const toggleTask = async (taskId: string) => {
     try {
@@ -162,7 +198,7 @@ export function TaskList() {
                   <Checkbox
                     checked={task.completed || task.isCompletedToday}
                     onCheckedChange={() => toggleTask(task.id)}
-                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
+                    className="border-blue-500 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
                     <p
@@ -191,6 +227,34 @@ export function TaskList() {
                       <Zap className="w-3 h-3" />+{task.type === 'DAILY' ? 10 : 50} EXP
                     </Badge>
                   </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>删除任务</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          确定要删除任务 "{task.title}" 吗？此操作无法撤销。
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteTaskHandler(task.id)}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          删除
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               ))
             )}
@@ -233,7 +297,7 @@ export function TaskList() {
                   <Checkbox
                     checked={task.completed || task.isCompletedThisWeek}
                     onCheckedChange={() => toggleTask(task.id)}
-                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
+                    className="border-blue-500 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
                     <p
@@ -256,6 +320,34 @@ export function TaskList() {
                       <Zap className="w-3 h-3" />+{task.type === 'DAILY' ? 10 : 50} EXP
                     </Badge>
                   </div>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity text-red-500 hover:text-red-600 hover:bg-red-50 h-8 w-8 p-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>删除任务</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          确定要删除任务 "{task.title}" 吗？此操作无法撤销。
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>取消</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => deleteTaskHandler(task.id)}
+                          className="bg-red-500 hover:bg-red-600"
+                        >
+                          删除
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                 </div>
               ))
             )}

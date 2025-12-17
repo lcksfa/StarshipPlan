@@ -3,6 +3,7 @@
 import { ShipStatus } from "@/components/ship-status"
 import { TaskList } from "@/components/task-list"
 import { AchievementBar } from "@/components/achievement-bar"
+import { ThemeToggle } from "@/components/theme-toggle"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { LogOut, ListChecks, Rocket, Trophy } from "lucide-react"
@@ -27,15 +28,18 @@ export function Dashboard({ username, onLogout }: DashboardProps) {
               欢迎回来，<span className="text-primary font-semibold">{username}</span> 宇航员
             </p>
           </div>
-          <Button
-            onClick={onLogout}
-            variant="outline"
-            size="sm"
-            className="self-center sm:self-auto border-border hover:bg-muted bg-transparent"
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            退出
-          </Button>
+          <div className="flex items-center gap-2 self-center sm:self-auto">
+            <ThemeToggle />
+            <Button
+              onClick={onLogout}
+              variant="outline"
+              size="sm"
+              className="border-border hover:bg-muted bg-transparent"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              退出
+            </Button>
+          </div>
         </div>
       </header>
 

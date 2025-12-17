@@ -91,13 +91,17 @@ export class TaskController {
       const { id } = req.params;
       const task = await this.taskService.getTaskById(id);
 
-      // 权限检查
+      // 权限检查 - 修复 createdBy -> creator
+      const creatorId = (task as any).creator?.id || (task as any).createdBy;
+
       if (req.user?.role === 'CHILD') {
-        if ((task.createdBy as any).parentId !== req.user.id && (task.createdBy as any).id !== req.user.parentId) {
+        // 儿童用户只能访问家长创建的任务
+        if (creatorId !== req.user.parentId) {
           return errorResponse(res, '无权访问此任务', 403);
         }
       } else if (req.user?.role === 'PARENT') {
-        if ((task.createdBy as any).id !== req.user.id && (task.createdBy as any).parentId !== req.user.id) {
+        // 家长用户只能访问自己创建的任务
+        if (creatorId !== req.user.id) {
           return errorResponse(res, '无权访问此任务', 403);
         }
       }
@@ -119,13 +123,17 @@ export class TaskController {
       // 先获取任务进行权限检查
       const existingTask = await this.taskService.getTaskById(id);
 
-      // 权限检查
+      // 权限检查 - 修复 createdBy -> creator
+      const creatorId = (existingTask as any).creator?.id || (existingTask as any).createdBy;
+
       if (req.user?.role === 'CHILD') {
-        if ((existingTask.createdBy as any).parentId !== req.user.id && (existingTask.createdBy as any).id !== req.user.parentId) {
+        // 儿童用户只能修改家长创建的任务
+        if (creatorId !== req.user.parentId) {
           return errorResponse(res, '无权修改此任务', 403);
         }
       } else if (req.user?.role === 'PARENT') {
-        if ((existingTask.createdBy as any).id !== req.user.id && (existingTask.createdBy as any).parentId !== req.user.id) {
+        // 家长用户只能修改自己创建的任务
+        if (creatorId !== req.user.id) {
           return errorResponse(res, '无权修改此任务', 403);
         }
       }
@@ -147,13 +155,17 @@ export class TaskController {
       // 先获取任务进行权限检查
       const existingTask = await this.taskService.getTaskById(id);
 
-      // 权限检查
+      // 权限检查 - 修复 createdBy -> creator
+      const creatorId = (existingTask as any).creator?.id || (existingTask as any).createdBy;
+
       if (req.user?.role === 'CHILD') {
-        if ((existingTask.createdBy as any).parentId !== req.user.id && (existingTask.createdBy as any).id !== req.user.parentId) {
+        // 儿童用户只能删除家长创建的任务
+        if (creatorId !== req.user.parentId) {
           return errorResponse(res, '无权删除此任务', 403);
         }
       } else if (req.user?.role === 'PARENT') {
-        if ((existingTask.createdBy as any).id !== req.user.id && (existingTask.createdBy as any).parentId !== req.user.id) {
+        // 家长用户只能删除自己创建的任务
+        if (creatorId !== req.user.id) {
           return errorResponse(res, '无权删除此任务', 403);
         }
       }
