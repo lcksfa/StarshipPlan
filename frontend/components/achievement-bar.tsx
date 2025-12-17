@@ -25,25 +25,22 @@ export function AchievementBar() {
   // 从真实数据获取信息，如果没有数据则显示默认值
   const starCoins = totalStarCoins || 0
 
-  // 使用 levelStats 或 currentLevel 来获取经验值
+  // 使用当前等级系统：每100点经验升一级
   let currentExp = 0
-  let nextLevelExp = 1000
   let progress = 0
 
-  if (levelStats) {
-    currentExp = levelStats.currentExp
-    nextLevelExp = levelStats.expToNext
-    progress = levelStats.progressPercentage
-  } else if (currentLevel) {
-    currentExp = currentLevel.exp
-    nextLevelExp = currentLevel.expToNext || 1000
-    progress = nextLevelExp > 0 ? (currentExp / nextLevelExp) * 100 : 0
+  if (currentLevel) {
+    currentExp = currentLevel.exp || 0
+    // 经验值进度条显示当前等级的进度（0-100）
+    progress = (currentExp % 100)
   } else {
     // 默认值
     currentExp = 0
-    nextLevelExp = 1000
     progress = 0
   }
+
+  // 计算距离下一级的经验值
+  const expToNextLevel = 100 - (currentExp % 100)
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm border-accent/30 shadow-lg shadow-accent/20">
@@ -66,14 +63,14 @@ export function AchievementBar() {
           </div>
           <div className="text-right">
             <p className="text-sm text-muted-foreground">距离下一级</p>
-            <p className="text-lg font-semibold text-foreground">{nextLevelExp - currentExp} EXP</p>
+            <p className="text-lg font-semibold text-foreground">{expToNextLevel} EXP</p>
           </div>
         </div>
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">经验值进度</span>
             <span className="font-medium text-foreground">
-              {currentExp}/{nextLevelExp}
+              {currentExp % 100}/100
             </span>
           </div>
           <Progress value={progress} className="h-3" />
