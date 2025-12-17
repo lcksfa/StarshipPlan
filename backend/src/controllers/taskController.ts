@@ -184,6 +184,24 @@ export class TaskController {
   }
 
   /**
+   * 取消完成任务
+   */
+  async uncompleteTask(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return errorResponse(res, '用户未认证', 401);
+      }
+
+      const { id } = req.params;
+      const result = await this.taskService.uncompleteTask(id, req.user.id);
+
+      return successResponse(res, result, '任务状态已取消完成，扣除相应奖励');
+    } catch (error) {
+      return this.handleError(res, error);
+    }
+  }
+
+  /**
    * 获取任务统计信息
    */
   async getTaskStats(req: AuthRequest, res: Response) {

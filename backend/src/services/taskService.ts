@@ -357,6 +357,61 @@ export class TaskService {
   }
 
   /**
+   * 取消完成任务
+   */
+  async uncompleteTask(taskId: string, userId: string) {
+    const task = await prisma.task.findUnique({
+      where: { id: taskId, isActive: true },
+    });
+
+    if (!task) {
+      throw new AppError('任务不存在或已停用', 404, 'NOT_FOUND' as any);
+    }
+
+    // 查找今天的完成记录
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
+
+    const existingCompletion = await prisma.taskCompletion.findFirst({
+      where: {
+        taskId,
+        userId,
+        completedAt: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+      },
+    });
+
+    if (!existingCompletion) {
+      throw new AppError('今天没有完成过这个任务', 404, 'NOT_FOUND' as any);
+    }
+
+    // 使用事务处理
+    const result = await prisma.$transaction(async (tx) => {
+      // 删除完成记录
+      const deletedCompletion = await tx.taskCompletion.delete({
+        where: { id: existingCompletion.id },
+      });
+
+      // 扣除用户经验值和等级（确保不会低于0）
+      await this.updateUserLevel(tx, userId, -existingCompletion.expGained);
+
+      // 扣除用户星币余额（确保不会低于0）
+      await this.updateUserPoints(tx, userId, -existingCompletion.starCoins, 'DEDUCT', `取消完成任务: ${task.title}`);
+
+      return deletedCompletion;
+    });
+
+    return {
+      completion: result,
+      starCoinsDeducted: existingCompletion.starCoins,
+      expDeducted: existingCompletion.expGained,
+    };
+  }
+
+  /**
    * 计算连击天数
    */
   private async calculateStreak(taskId: string, userId: string): Promise<number> {

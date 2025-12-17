@@ -48,6 +48,7 @@ interface TaskState {
   updateTask: (taskId: string, updates: any) => Promise<Task | null>;
   deleteTask: (taskId: string) => Promise<boolean>;
   completeTask: (taskId: string) => Promise<TaskCompletion | null>;
+  uncompleteTask: (taskId: string) => Promise<TaskCompletion | null>;
   completeMultipleTasks: (taskIds: string[]) => Promise<TaskCompletion[] | null>;
 
   // 本地状态更新
@@ -55,6 +56,7 @@ interface TaskState {
   updateTaskInStore: (taskId: string, updates: Partial<Task>) => void;
   removeTask: (taskId: string) => void;
   addTaskCompletion: (completion: TaskCompletion) => void;
+  removeTaskCompletion: (taskId: string, userId: string) => void;
   updateTaskStats: (stats: TaskStats) => void;
 
   // 重置状态
@@ -109,11 +111,14 @@ export const useTaskStore = create<TaskState>()(
           });
 
           if (response.success && response.data) {
+            // 处理分页响应结构
+            const taskData = Array.isArray(response.data) ? response.data : response.data.items || [];
+            const pagination = response.data.pagination || {};
+
             set((state) => ({
-              tasks: refresh ? response.data : [...state.tasks, ...response.data],
+              tasks: refresh ? taskData : [...state.tasks, ...taskData],
               currentPage: refresh ? 1 : state.currentPage + 1,
-              hasMore: response.pagination ?
-                response.pagination.page < response.pagination.totalPages : false,
+              hasMore: pagination.page < pagination.totalPages,
               error: null
             }));
           } else {
@@ -270,6 +275,22 @@ export const useTaskStore = create<TaskState>()(
         return null;
       },
 
+      uncompleteTask: async (taskId) => {
+        try {
+          const service = await getTasksService();
+          if (!service) return null;
+
+          const response = await service.uncompleteTask(taskId);
+          if (response.success && response.data) {
+            get().removeTaskCompletion(taskId, response.data.userId);
+            return response.data;
+          }
+        } catch (error) {
+          console.error('取消完成任务失败:', error);
+        }
+        return null;
+      },
+
       completeMultipleTasks: async (taskIds) => {
         try {
           const service = await getTasksService();
@@ -325,9 +346,26 @@ export const useTaskStore = create<TaskState>()(
 
           return {
             taskCompletions: [completion, ...state.taskCompletions],
-            tasks: state.tasks.map(updateTaskCompleted),
-            todayTasks: state.todayTasks.map(updateTaskCompleted),
-            weeklyTasks: state.weeklyTasks.map(updateTaskCompleted),
+            tasks: Array.isArray(state.tasks) ? state.tasks.map(updateTaskCompleted) : state.tasks,
+            todayTasks: Array.isArray(state.todayTasks) ? state.todayTasks.map(updateTaskCompleted) : state.todayTasks,
+            weeklyTasks: Array.isArray(state.weeklyTasks) ? state.weeklyTasks.map(updateTaskCompleted) : state.weeklyTasks,
+          };
+        });
+      },
+
+      removeTaskCompletion: (taskId, userId) => {
+        set((state) => {
+          // 更新任务完成状态为未完成
+          const updateTaskUncompleted = (task: any) =>
+            task.id === taskId ? { ...task, completed: false } : task;
+
+          return {
+            taskCompletions: state.taskCompletions.filter(
+              completion => !(completion.taskId === taskId && completion.userId === userId)
+            ),
+            tasks: Array.isArray(state.tasks) ? state.tasks.map(updateTaskUncompleted) : state.tasks,
+            todayTasks: Array.isArray(state.todayTasks) ? state.todayTasks.map(updateTaskUncompleted) : state.todayTasks,
+            weeklyTasks: Array.isArray(state.weeklyTasks) ? state.weeklyTasks.map(updateTaskUncompleted) : state.weeklyTasks,
           };
         });
       },

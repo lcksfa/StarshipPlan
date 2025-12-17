@@ -17,7 +17,7 @@ export function TaskList() {
   // 使用真实的 store 数据
   const dailyTasks = useTodayTasks()
   const weeklyTasks = useWeeklyTasks()
-  const { fetchTodayTasks, fetchWeeklyTasks, completeTask, fetchTasks, isLoading, error } = useTaskStore()
+  const { fetchTodayTasks, fetchWeeklyTasks, completeTask, uncompleteTask, fetchTasks, isLoading, error } = useTaskStore()
 
   // 组件加载时获取任务数据
   useEffect(() => {
@@ -35,26 +35,40 @@ export function TaskList() {
 
       // 检查任务是否已完成
       const isCompleted = task.completed || task.isCompletedToday || task.isCompletedThisWeek
+
       if (isCompleted) {
-        toast.info("该任务今天已经完成了！")
-        return
-      }
+        // 如果任务已完成，则取消完成
+        const result = await uncompleteTask(taskId)
+        if (result) {
+          // 刷新任务列表和积分数据
+          await Promise.all([
+            fetchTodayTasks(),
+            fetchWeeklyTasks(),
+            fetchTasks(true) // 刷新主任务列表
+          ])
 
-      const completion = await completeTask(taskId)
-      if (completion) {
-        // 刷新任务列表和积分数据
-        await Promise.all([
-          fetchTodayTasks(),
-          fetchWeeklyTasks(),
-          fetchTasks(true) // 刷新主任务列表
-        ])
-
-        toast.success(`任务"${task.title}"完成！获得 ${task.starCoins} 星币`)
+          toast.success(`任务"${task.title}"已取消完成，扣除相应星币`)
+        } else {
+          toast.error("取消完成任务失败，请重试")
+        }
       } else {
-        toast.error("完成任务失败，请重试")
+        // 如果任务未完成，则完成任务
+        const completion = await completeTask(taskId)
+        if (completion) {
+          // 刷新任务列表和积分数据
+          await Promise.all([
+            fetchTodayTasks(),
+            fetchWeeklyTasks(),
+            fetchTasks(true) // 刷新主任务列表
+          ])
+
+          toast.success(`任务"${task.title}"完成！获得 ${task.starCoins} 星币`)
+        } else {
+          toast.error("完成任务失败，请重试")
+        }
       }
     } catch (error: any) {
-      console.error("完成任务失败:", error)
+      console.error("任务状态切换失败:", error)
 
       // 处理特定错误消息
       if (error.message === "今天已经完成过这个任务了") {
@@ -64,8 +78,15 @@ export function TaskList() {
           fetchTodayTasks(),
           fetchWeeklyTasks()
         ])
+      } else if (error.message === "今天没有完成过这个任务") {
+        toast.info("该任务今天还没有完成过！")
+        // 刷新任务列表以同步状态
+        await Promise.all([
+          fetchTodayTasks(),
+          fetchWeeklyTasks()
+        ])
       } else {
-        toast.error("完成任务失败，请重试")
+        toast.error("操作失败，请重试")
       }
     }
   }

@@ -212,6 +212,17 @@ router.post(
 );
 
 /**
+ * @route   DELETE /api/tasks/:id/complete
+ * @desc    取消完成任务
+ * @access  Private (CHILD or PARENT for demo)
+ */
+router.delete(
+  '/:id/complete',
+  authenticate,
+  asyncHandler(taskController.uncompleteTask.bind(taskController))
+);
+
+/**
  * @route   POST /api/tasks/batch-complete
  * @desc    批量完成任务
  * @access  Private (CHILD or PARENT for demo)

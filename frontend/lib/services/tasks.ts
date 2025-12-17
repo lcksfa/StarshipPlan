@@ -88,6 +88,15 @@ export class TasksService {
   }
 
   /**
+   * 取消完成任务
+   */
+  async uncompleteTask(taskId: string): Promise<ApiResponse<TaskCompletion>> {
+    return withErrorHandling(() =>
+      apiClient.delete<TaskCompletion>(`/api/tasks/${taskId}/complete`)
+    );
+  }
+
+  /**
    * 批量完成任务
    */
   async completeMultipleTasks(taskIds: string[]): Promise<ApiResponse<TaskCompletion[]>> {
