@@ -43,16 +43,39 @@ class AuthManager {
 
   // 模拟登录
   async login(username: string, password: string): Promise<boolean> {
-    // 简单的模拟逻辑
-    const user = MOCK_USERS.find(u => u.username === username);
+    // 家长账号检查
+    if (username === 'parent') {
+      const parentUser = MOCK_USERS.find(u => u.role === 'PARENT');
+      if (parentUser) {
+        this.currentUser = parentUser;
+        this.token = `mock-token-${parentUser.id}-${Date.now()}`;
 
-    if (user) {
-      this.currentUser = user;
-      this.token = `mock-token-${user.id}-${Date.now()}`;
+        // 保存到本地存储
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('mockUser', JSON.stringify(parentUser));
+          localStorage.setItem('mockToken', this.token);
+        }
+
+        return true;
+      }
+    }
+
+    // 其他用户名都当作儿童账号，动态创建儿童用户
+    if (username && username.trim()) {
+      const childUser: MockUser = {
+        id: 'child-1', // 所有儿童用户共用同一个ID，简化后端处理
+        username: username.trim(), // 用户输入的名字作为username
+        displayName: username.trim(), // 显示名也使用用户输入的名字
+        role: 'CHILD',
+        parentId: 'parent-1'
+      };
+
+      this.currentUser = childUser;
+      this.token = `mock-token-child-${Date.now()}`;
 
       // 保存到本地存储
       if (typeof window !== 'undefined') {
-        localStorage.setItem('mockUser', JSON.stringify(user));
+        localStorage.setItem('mockUser', JSON.stringify(childUser));
         localStorage.setItem('mockToken', this.token);
       }
 
