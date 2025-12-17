@@ -2,153 +2,159 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
-import dotenv from 'dotenv';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import winston from 'winston';
+import { createRequestLogger } from './utils/logger';
+import { errorHandler, notFoundHandler, setupProcessHandlers } from './middleware/errorHandler';
+import { sanitizeRequest } from './middleware/validation';
+import { testConnection, disconnectDatabase } from './lib/database';
 
-// 加载环境变量
-dotenv.config();
-
-// 导入路由（后续创建）
+// 导入路由（稍后创建）
+// import authRoutes from './routes/auth';
 // import userRoutes from './routes/users';
 // import taskRoutes from './routes/tasks';
 
 const app = express();
 const PORT = process.env.PORT || 8000;
 
-// 中间件配置
+// 设置进程异常处理
+setupProcessHandlers();
+
+// 信任代理（用于部署在反向代理后）
+app.set('trust proxy', 1);
+
+// 安全中间件
 app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
-      imgSrc: ["'self'", "data:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'", "data:"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'", "data:"],
-      frameSrc: ["'none'"],
-    },
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// CORS 配置
+const corsOptions = {
+  origin: function (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'];
+
+    // 允许没有 origin 的请求（如移动应用、Postman等）
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('不允许的 CORS 来源'), false);
+    }
   },
-}));
-
-app.use(compression());
-app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'http://127.0.0.1:3000'],
   credentials: true,
-}));
+  optionsSuccessStatus: 200
+};
 
+app.use(cors(corsOptions));
+
+// 压缩响应
+app.use(compression());
+
+// 请求日志中间件
+app.use(createRequestLogger);
+
+// 解析 JSON 请求体
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// 静态文件服务
-app.use(express.static('public')));
-
-// 日志配置
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.errors({ stack: true }),
-    winston.format.json()
-  ),
-  defaultMeta: { service: 'starship-plan-backend' },
-  transports: [
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      )
-    })
-  ],
-});
-
-// 请求日志中间件
-app.use((req, res, next) => {
-  logger.info(`${req.method} ${req.url} - ${req.ip}`);
-  next();
-});
-
-// 错误处理中间件
-app.use((err, req, res, next) => {
-  logger.error(`${req.method} ${req.url} - Error: ${err.message}`);
-  res.status(500).json({
-    success: false,
-    message: 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err.stack : undefined
-  });
-});
-
-// 404处理
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: 'API endpoint not found'
-  });
-});
+// 请求清理中间件
+app.use(sanitizeRequest);
 
 // 健康检查端点
 app.get('/health', (req, res) => {
   res.json({
-    success: true,
-    message: 'Starship Plan Backend is running',
+    status: 'ok',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV || 'development'
+    environment: process.env.NODE_ENV || 'development',
   });
 });
 
-// API路由（后续实现）
-// app.use('/api/users', userRoutes);
-// app.use('/api/tasks', taskRoutes);
-
-// 根路径
-app.get('/', (req, res) => {
+// API 路由
+app.get('/api', (req, res) => {
   res.json({
-    success: true,
-    message: 'Starship Plan Backend API',
+    message: 'StarshipPlan API 服务器',
     version: '1.0.0',
     endpoints: {
       health: '/health',
+      auth: '/api/auth',
       users: '/api/users',
       tasks: '/api/tasks',
-    }
+    },
   });
 });
 
-// 创建HTTP服务器
-const server = createServer(app);
+// 注册路由（暂时注释掉，后续实现）
+// app.use('/api/auth', authRoutes);
+// app.use('/api/users', userRoutes);
+// app.use('/api/tasks', taskRoutes);
 
-// 创建Socket.IO服务器
-const io = new Server(server, {
-  cors: {
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000', 'http://127.0.0.1:3000'],
-    methods: ['GET', 'POST'],
-  }
-});
+// 404 处理
+app.use(notFoundHandler);
 
-// Socket.IO连接处理
-io.on('connection', (socket) => {
-  logger.info(`Client connected: ${socket.id}`);
-
-  socket.on('join-room', (room) => {
-    socket.join(room);
-    logger.info(`Client ${socket.id} joined room: ${room}`);
-  });
-
-  socket.on('disconnect', () => {
-    logger.info(`Client disconnected: ${socket.id}`);
-  });
-});
+// 全局错误处理
+app.use(errorHandler);
 
 // 启动服务器
-server.listen(PORT, () => {
-  logger.info(`Starship Plan Backend Server running on port ${PORT}`);
-  logger.info(`Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+async function startServer() {
+  try {
+    // 测试数据库连接
+    const dbConnected = await testConnection();
+    if (!dbConnected) {
+      throw new Error('数据库连接失败');
+    }
 
-export { app, io };
+    // 启动 HTTP 服务器
+    const server = app.listen(PORT, () => {
+      console.log(`🚀 StarshipPlan API 服务器已启动`);
+      console.log(`📍 服务地址: http://localhost:${PORT}`);
+      console.log(`🏥 健康检查: http://localhost:${PORT}/health`);
+      console.log(`📚 API 文档: http://localhost:${PORT}/api`);
+      console.log(`🌍 环境: ${process.env.NODE_ENV || 'development'}`);
+    });
+
+    // 优雅关闭处理
+    const gracefulShutdown = async (signal: string) => {
+      console.log(`\n收到 ${signal} 信号，开始优雅关闭...`);
+
+      // 停止接受新连接
+      server.close(async () => {
+        console.log('HTTP 服务器已关闭');
+
+        try {
+          // 关闭数据库连接
+          await disconnectDatabase();
+          console.log('数据库连接已关闭');
+          process.exit(0);
+        } catch (error) {
+          console.error('关闭数据库连接时出错:', error);
+          process.exit(1);
+        }
+      });
+
+      // 强制退出超时
+      setTimeout(() => {
+        console.error('强制退出服务器');
+        process.exit(1);
+      }, 10000);
+    };
+
+    // 监听关闭信号
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+    return server;
+  } catch (error) {
+    console.error('启动服务器失败:', error);
+    process.exit(1);
+  }
+}
+
+// 如果直接运行此文件，则启动服务器
+if (require.main === module) {
+  startServer().catch((error) => {
+    console.error('启动服务器时发生错误:', error);
+    process.exit(1);
+  });
+}
+
+export default app;
