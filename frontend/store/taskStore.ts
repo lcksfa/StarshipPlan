@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
 import { Task, TaskCompletion, TaskStats } from '../types/api';
-import { tasksService } from '../lib/services';
+import { getTasksService } from '../lib/services/client-safe';
 
 interface TaskState {
   // 数据状态
@@ -97,7 +97,13 @@ export const useTaskStore = create<TaskState>()(
         }
 
         try {
-          const response = await tasksService.getTasks({
+          const service = await getTasksService();
+          if (!service) {
+            setError('服务不可用');
+            return;
+          }
+
+          const response = await service.getTasks({
             page: refresh ? 1 : currentPage,
             ...filters
           });
@@ -123,7 +129,10 @@ export const useTaskStore = create<TaskState>()(
 
       fetchTaskById: async (taskId) => {
         try {
-          const response = await tasksService.getTask(taskId);
+          const service = await getTasksService();
+          if (!service) return null;
+
+          const response = await service.getTask(taskId);
           return response.success && response.data ? response.data : null;
         } catch (error) {
           console.error('获取任务详情失败:', error);
@@ -133,7 +142,10 @@ export const useTaskStore = create<TaskState>()(
 
       fetchTodayTasks: async () => {
         try {
-          const response = await tasksService.getTodayTasks();
+          const service = await getTasksService();
+          if (!service) return;
+
+          const response = await service.getTodayTasks();
           if (response.success && response.data) {
             set({ todayTasks: response.data });
           }
@@ -144,7 +156,10 @@ export const useTaskStore = create<TaskState>()(
 
       fetchWeeklyTasks: async () => {
         try {
-          const response = await tasksService.getWeeklyTasks();
+          const service = await getTasksService();
+          if (!service) return;
+
+          const response = await service.getWeeklyTasks();
           if (response.success && response.data) {
             set({ weeklyTasks: response.data });
           }
@@ -155,7 +170,10 @@ export const useTaskStore = create<TaskState>()(
 
       fetchTaskStats: async (userId) => {
         try {
-          const response = await tasksService.getTaskStats(userId);
+          const service = await getTasksService();
+          if (!service) return;
+
+          const response = await service.getTaskStats(userId);
           if (response.success && response.data) {
             set({ taskStats: response.data });
           }
@@ -166,7 +184,10 @@ export const useTaskStore = create<TaskState>()(
 
       fetchTaskCompletions: async (userId) => {
         try {
-          const response = await tasksService.getTaskCompletions(userId);
+          const service = await getTasksService();
+          if (!service) return;
+
+          const response = await service.getTaskCompletions(userId);
           if (response.success && response.data) {
             set({ taskCompletions: response.data });
           }
@@ -187,7 +208,10 @@ export const useTaskStore = create<TaskState>()(
       // 任务操作
       createTask: async (taskData) => {
         try {
-          const response = await tasksService.createTask(taskData);
+          const service = await getTasksService();
+          if (!service) return null;
+
+          const response = await service.createTask(taskData);
           if (response.success && response.data) {
             get().addTask(response.data);
             return response.data;
@@ -200,7 +224,10 @@ export const useTaskStore = create<TaskState>()(
 
       updateTask: async (taskId, updates) => {
         try {
-          const response = await tasksService.updateTask(taskId, updates);
+          const service = await getTasksService();
+          if (!service) return null;
+
+          const response = await service.updateTask(taskId, updates);
           if (response.success && response.data) {
             get().updateTaskInStore(taskId, response.data);
             return response.data;
@@ -213,7 +240,10 @@ export const useTaskStore = create<TaskState>()(
 
       deleteTask: async (taskId) => {
         try {
-          const response = await tasksService.deleteTask(taskId);
+          const service = await getTasksService();
+          if (!service) return false;
+
+          const response = await service.deleteTask(taskId);
           if (response.success) {
             get().removeTask(taskId);
             return true;
@@ -226,7 +256,10 @@ export const useTaskStore = create<TaskState>()(
 
       completeTask: async (taskId) => {
         try {
-          const response = await tasksService.completeTask({ taskId });
+          const service = await getTasksService();
+          if (!service) return null;
+
+          const response = await service.completeTask({ taskId });
           if (response.success && response.data) {
             get().addTaskCompletion(response.data);
             return response.data;
@@ -239,7 +272,10 @@ export const useTaskStore = create<TaskState>()(
 
       completeMultipleTasks: async (taskIds) => {
         try {
-          const response = await tasksService.completeMultipleTasks(taskIds);
+          const service = await getTasksService();
+          if (!service) return null;
+
+          const response = await service.completeMultipleTasks(taskIds);
           if (response.success && response.data) {
             response.data.forEach(completion => {
               get().addTaskCompletion(completion);

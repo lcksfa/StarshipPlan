@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { PointTransaction, LevelRecord, LevelStats } from '../types/api';
-import { pointsService } from '../lib/services';
+import { getPointsService } from '../lib/services/client-safe';
 
 interface PointsState {
   // 数据状态
@@ -98,7 +98,13 @@ export const usePointsStore = create<PointsState>()(
       // 数据获取
       fetchUserPoints: async (userId) => {
         try {
-          const response = await pointsService.getUserPoints(userId);
+          const service = await getPointsService();
+          if (!service) {
+            console.error('Points service not available');
+            return;
+          }
+
+          const response = await service.getUserPoints(userId);
           if (response.success && response.data) {
             set({
               totalStarCoins: response.data.totalStarCoins,
@@ -118,7 +124,10 @@ export const usePointsStore = create<PointsState>()(
         }
 
         try {
-          const response = await pointsService.getTransactions(userId, {
+          const service = await getPointsService();
+          if (!service) return;
+
+          const response = await service.getTransactions(userId, {
             page: loadMore ? transactionsPage : 1,
             ...transactionFilters
           });
@@ -141,7 +150,10 @@ export const usePointsStore = create<PointsState>()(
 
       fetchLevelHistory: async (userId) => {
         try {
-          const response = await pointsService.getLevelHistory(userId);
+          const service = await getPointsService();
+          if (!service) return;
+
+          const response = await service.getLevelHistory(userId);
           if (response.success && response.data) {
             set({ levelHistory: response.data });
           }
@@ -152,7 +164,10 @@ export const usePointsStore = create<PointsState>()(
 
       fetchAvailableRewards: async () => {
         try {
-          const response = await pointsService.getAvailableRewards();
+          const service = await getPointsService();
+          if (!service) return;
+
+          const response = await service.getAvailableRewards();
           if (response.success && response.data) {
             set({ availableRewards: response.data });
           }
@@ -163,7 +178,10 @@ export const usePointsStore = create<PointsState>()(
 
       fetchLevelStats: async (userId) => {
         try {
-          const response = await pointsService.getLevelStats(userId);
+          const service = await getPointsService();
+          if (!service) return;
+
+          const response = await service.getLevelStats(userId);
           if (response.success && response.data) {
             set({ levelStats: response.data });
           }
@@ -174,7 +192,10 @@ export const usePointsStore = create<PointsState>()(
 
       fetchLeaderboard: async (type = 'points') => {
         try {
-          const response = await pointsService.getLeaderboard({ type, limit: 10 });
+          const service = await getPointsService();
+          if (!service) return;
+
+          const response = await service.getLeaderboard({ type, limit: 10 });
           if (response.success && response.data) {
             set({ leaderboard: response.data });
           }
@@ -186,7 +207,10 @@ export const usePointsStore = create<PointsState>()(
       // 积分操作
       exchangeReward: async (userId, rewardId, cost) => {
         try {
-          const response = await pointsService.exchangeRewards(userId, { rewardId, cost });
+          const service = await getPointsService();
+          if (!service) return false;
+
+          const response = await service.exchangeRewards(userId, { rewardId, cost });
           if (response.success) {
             // 重新获取用户积分
             get().fetchUserPoints(userId);
@@ -200,7 +224,10 @@ export const usePointsStore = create<PointsState>()(
 
       checkLevelUp: async (userId) => {
         try {
-          const response = await pointsService.checkLevelUp(userId);
+          const service = await getPointsService();
+          if (!service) return false;
+
+          const response = await service.checkLevelUp(userId);
           return response.success && response.data?.canLevelUp || false;
         } catch (error) {
           console.error('检查升级失败:', error);
@@ -210,7 +237,10 @@ export const usePointsStore = create<PointsState>()(
 
       triggerLevelUp: async (userId) => {
         try {
-          const response = await pointsService.triggerLevelUp(userId);
+          const service = await getPointsService();
+          if (!service) return false;
+
+          const response = await service.triggerLevelUp(userId);
           if (response.success && response.data?.levelUp) {
             // 重新获取用户等级信息
             get().fetchUserPoints(userId);
