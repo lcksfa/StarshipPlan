@@ -41,30 +41,34 @@ export function Dashboard({ username, onLogout }: DashboardProps) {
 
       <div className="hidden md:block">
         <div className="grid gap-4 sm:gap-6 md:grid-cols-3 mb-4 sm:mb-6">
-          <ShipStatus />
+          <div className="flex items-start">
+            <div className="w-full">
+              <ShipStatus />
+            </div>
+          </div>
           <div className="md:col-span-2">
-            <AchievementBar />
+            <TaskList />
           </div>
         </div>
-        <TaskList />
+        <AchievementBar />
       </div>
 
       <div className="md:hidden">
-        <Tabs defaultValue="tasks" className="w-full">
+        <Tabs defaultValue="ship" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-card/80 backdrop-blur-sm border border-accent/30">
-            <TabsTrigger
-              value="tasks"
-              className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
-            >
-              <ListChecks className="w-4 h-4" />
-              <span className="hidden sm:inline">任务</span>
-            </TabsTrigger>
             <TabsTrigger
               value="ship"
               className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
             >
               <Rocket className="w-4 h-4" />
               <span className="hidden sm:inline">飞船</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="tasks"
+              className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+            >
+              <ListChecks className="w-4 h-4" />
+              <span className="hidden sm:inline">任务</span>
             </TabsTrigger>
             <TabsTrigger
               value="achievements"
@@ -75,12 +79,12 @@ export function Dashboard({ username, onLogout }: DashboardProps) {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="tasks" className="mt-4">
-            <TaskList />
-          </TabsContent>
-
           <TabsContent value="ship" className="mt-4">
             <ShipStatus />
+          </TabsContent>
+
+          <TabsContent value="tasks" className="mt-4">
+            <TaskList />
           </TabsContent>
 
           <TabsContent value="achievements" className="mt-4">

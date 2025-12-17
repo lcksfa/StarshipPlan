@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Calendar, Repeat, Sparkles } from "lucide-react"
-import { AddTaskDialog } from "@/components/add-task-dialog"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Calendar, Repeat, Sparkles, Plus } from "lucide-react"
+import { toast } from "sonner"
+import { AddTaskDialog } from "./add-task-dialog"
 import { useTodayTasks, useWeeklyTasks, useTaskStore } from "@/store/taskStore"
 import { Task } from "@/types/api"
-import { toast } from "sonner"
 
 export function TaskList() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -92,114 +92,129 @@ export function TaskList() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg">
-        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-          <CardTitle className="flex items-center gap-2 text-primary text-base sm:text-lg">
-            <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
-            每日任务
-          </CardTitle>
-          <Button
-            onClick={() => setIsDialogOpen(true)}
-            size="sm"
-            className="bg-primary hover:bg-primary/90 w-full sm:w-auto"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            添加任务
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-2 sm:space-y-3">
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : dailyTasks.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p className="mb-2">暂无每日任务</p>
-              <p className="text-sm">点击上方"添加任务"按钮创建新任务</p>
-            </div>
-          ) : (
-            dailyTasks.map((task) => (
-              <div
-                key={task.id}
-                className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
-              >
-                <Checkbox
-                  checked={task.completed || task.isCompletedToday}
-                  onCheckedChange={() => toggleTask(task.id)}
-                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={`font-medium text-sm sm:text-base ${(task.completed || task.isCompletedToday) ? "line-through text-muted-foreground" : "text-foreground"}`}
-                  >
-                    {task.title}
-                  </p>
-                  {task.streak && (
-                    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                      <Sparkles className="w-3 h-3 text-accent" />
-                      连续 {task.streak} 天
+    <div className="space-y-3 sm:space-y-4">
+      {/* 并排的任务卡片 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
+        {/* 每日任务卡片 */}
+        <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="flex items-center gap-2 text-primary text-base sm:text-lg">
+              <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+              每日任务
+            </CardTitle>
+            <Button
+              onClick={() => setIsDialogOpen(true)}
+              size="sm"
+              variant="outline"
+              className="h-8 px-3 border-primary/50 hover:bg-primary/10 hover:border-primary"
+            >
+              <Plus className="w-3 h-3" />
+              <span className="hidden sm:inline ml-1">添加</span>
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-1.5 sm:space-y-2">
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : dailyTasks.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="mb-2">暂无每日任务</p>
+                <p className="text-sm">点击上方"添加任务"按钮创建新任务</p>
+              </div>
+            ) : (
+              dailyTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="flex items-center gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
+                >
+                  <Checkbox
+                    checked={task.completed || task.isCompletedToday}
+                    onCheckedChange={() => toggleTask(task.id)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={`font-medium text-sm sm:text-base ${(task.completed || task.isCompletedToday) ? "line-through text-muted-foreground" : "text-foreground"}`}
+                    >
+                      {task.title}
                     </p>
-                  )}
-                </div>
-                <Badge
-                  variant="secondary"
-                  className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 flex-shrink-0 text-xs sm:text-sm"
-                >
-                  <Sparkles className="w-3 h-3" />+{task.starCoins}
-                </Badge>
-              </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-primary text-base sm:text-lg">
-            <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
-            每周任务
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2 sm:space-y-3">
-          {isLoading ? (
-            <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-            </div>
-          ) : weeklyTasks.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <p className="mb-2">暂无每周任务</p>
-              <p className="text-sm">每周任务可以帮助培养长期习惯</p>
-            </div>
-          ) : (
-            weeklyTasks.map((task) => (
-              <div
-                key={task.id}
-                className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
-              >
-                <Checkbox
-                  checked={task.completed || task.isCompletedThisWeek}
-                  onCheckedChange={() => toggleTask(task.id)}
-                  className="data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
-                />
-                <div className="flex-1 min-w-0">
-                  <p
-                    className={`font-medium text-sm sm:text-base ${(task.completed || task.isCompletedThisWeek) ? "line-through text-muted-foreground" : "text-foreground"}`}
+                    {task.streak && (
+                      <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-accent" />
+                        连续 {task.streak} 天
+                      </p>
+                    )}
+                  </div>
+                  <Badge
+                    variant="secondary"
+                    className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 flex-shrink-0 text-xs sm:text-sm"
                   >
-                    {task.title}
-                  </p>
+                    <Sparkles className="w-3 h-3" />+{task.starCoins}
+                  </Badge>
                 </div>
-                <Badge
-                  variant="secondary"
-                  className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 flex-shrink-0 text-xs sm:text-sm"
-                >
-                  <Sparkles className="w-3 h-3" />+{task.starCoins}
-                </Badge>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        {/* 每周任务卡片 */}
+        <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
+            <CardTitle className="flex items-center gap-2 text-primary text-base sm:text-lg">
+              <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
+              每周任务
+            </CardTitle>
+            <Button
+              onClick={() => setIsDialogOpen(true)}
+              size="sm"
+              variant="outline"
+              className="h-8 px-3 border-primary/50 hover:bg-primary/10 hover:border-primary"
+            >
+              <Plus className="w-3 h-3" />
+              <span className="hidden sm:inline ml-1">添加</span>
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-1.5 sm:space-y-2">
+            {isLoading ? (
+              <div className="flex justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
-            ))
-          )}
-        </CardContent>
-      </Card>
+            ) : weeklyTasks.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                <p className="mb-2">暂无每周任务</p>
+                <p className="text-sm">每周任务可以帮助培养长期习惯</p>
+              </div>
+            ) : (
+              weeklyTasks.map((task) => (
+                <div
+                  key={task.id}
+                  className="flex items-center gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
+                >
+                  <Checkbox
+                    checked={task.completed || task.isCompletedThisWeek}
+                    onCheckedChange={() => toggleTask(task.id)}
+                    className="data-[state=checked]:bg-primary data-[state=checked]:border-primary flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={`font-medium text-sm sm:text-base ${(task.completed || task.isCompletedThisWeek) ? "line-through text-muted-foreground" : "text-foreground"}`}
+                    >
+                      {task.title}
+                    </p>
+                  </div>
+                  <Badge
+                    variant="secondary"
+                    className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 flex-shrink-0 text-xs sm:text-sm"
+                  >
+                    <Sparkles className="w-3 h-3" />+{task.starCoins}
+                  </Badge>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <AddTaskDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
     </div>
