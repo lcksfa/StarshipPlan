@@ -31,9 +31,9 @@ export function ShipStatus() {
           我的星舰
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-3 sm:space-y-4">
         <div className="flex items-center justify-center">
-          <div className="relative w-24 h-24 sm:w-32 sm:h-32 animate-float">
+          <div className="relative w-20 h-20 sm:w-28 sm:h-28 animate-float">
             <svg viewBox="0 0 100 100" className="w-full h-full">
               <defs>
                 <linearGradient id="shipGradient" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -51,9 +51,17 @@ export function ShipStatus() {
           </div>
         </div>
         <div className="text-center space-y-1">
-          <p className="text-xl sm:text-2xl font-bold text-accent">{shipName}</p>
-          <p className="text-xs sm:text-sm text-muted-foreground">等级 {level} 星舰</p>
-          <p className="text-xs sm:text-sm text-primary font-medium">{rankTitle}</p>
+          <p className="text-lg sm:text-xl font-bold text-accent">{shipName}</p>
+          <p className="text-xs text-muted-foreground">等级 {level} 星舰</p>
+          <p className="text-xs text-primary font-medium">{rankTitle}</p>
+        </div>
+
+        {/* 简化的状态区域 */}
+        <div className="pt-2 border-t border-border/20">
+          <div className="text-center py-2">
+            <p className="text-sm text-muted-foreground">星舰运行正常</p>
+            <p className="text-xs text-muted-foreground mt-1">准备执行今日任务</p>
+          </div>
         </div>
       </CardContent>
     </Card>
