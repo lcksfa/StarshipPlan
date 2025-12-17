@@ -11,16 +11,14 @@ export function AchievementBar() {
   const currentUser = useCurrentUser()
   const totalStarCoins = useTotalStarCoins()
   const currentLevel = useCurrentLevel()
-  const levelStats = useLevelStats()
-  const { fetchUserPoints, fetchLevelStats } = usePointsStore()
+  const { fetchUserPoints } = usePointsStore()
 
   // 组件加载时获取用户积分和等级数据
   useEffect(() => {
     if (currentUser?.id) {
       fetchUserPoints(currentUser.id)
-      fetchLevelStats(currentUser.id)
     }
-  }, [currentUser?.id, fetchUserPoints, fetchLevelStats])
+  }, [currentUser?.id, fetchUserPoints])
 
   // 从真实数据获取信息，如果没有数据则显示默认值
   const starCoins = totalStarCoins || 0
@@ -42,6 +40,10 @@ export function AchievementBar() {
   // 计算距离下一级的经验值
   const expToNextLevel = 100 - (currentExp % 100)
 
+  // 等级信息
+  const userLevel = currentLevel?.level || 1
+  const rankTitle = currentLevel?.rankTitle || "见习宇航员"
+
   return (
     <Card className="bg-card/80 backdrop-blur-sm border-accent/30 shadow-lg shadow-accent/20">
       <CardHeader>
@@ -62,8 +64,9 @@ export function AchievementBar() {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm text-muted-foreground">距离下一级</p>
+            <p className="text-sm text-muted-foreground">等级 {userLevel} - {rankTitle}</p>
             <p className="text-lg font-semibold text-foreground">{expToNextLevel} EXP</p>
+            <p className="text-xs text-muted-foreground">距离升级</p>
           </div>
         </div>
         <div className="space-y-2">

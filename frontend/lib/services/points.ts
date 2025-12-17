@@ -24,27 +24,30 @@ export class PointsService {
   /**
    * 获取用户当前积分和等级信息
    */
-  async getUserPoints(userId: string): Promise<ApiResponse<{ totalStarCoins: number; level: LevelRecord }>> {
-    return withErrorHandling(() => apiClient.get<{ totalStarCoins: number; level: LevelRecord }>(`/api/points/user/${userId}`));
+  async getUserPoints(userId?: string): Promise<ApiResponse<{ totalStarCoins: number; level: LevelRecord }>> {
+    // 用户ID从认证token中获取，不需要在URL中传递
+    return withErrorHandling(() => apiClient.get<{ totalStarCoins: number; level: LevelRecord }>(`/api/points`));
   }
 
   /**
    * 获取积分交易记录
    */
   async getTransactions(
-    userId: string,
+    userId?: string,
     params?: { page?: number; limit?: number; type?: string }
   ): Promise<ApiResponse<PointTransaction[]>> {
+    // 用户ID从认证token中获取，不需要在URL中传递
     return withErrorHandling(() =>
-      apiClient.get<PointTransaction[]>(`/api/points/transactions/${userId}`, params)
+      apiClient.get<PointTransaction[]>(`/api/points/transactions`, params)
     );
   }
 
   /**
    * 获取等级记录历史
    */
-  async getLevelHistory(userId: string): Promise<ApiResponse<LevelRecord[]>> {
-    return withErrorHandling(() => apiClient.get<LevelRecord[]>(`/api/points/levels/${userId}`));
+  async getLevelHistory(userId?: string): Promise<ApiResponse<LevelRecord[]>> {
+    // 用户ID从认证token中获取，不需要在URL中传递
+    return withErrorHandling(() => apiClient.get<LevelRecord[]>(`/api/points/levels`));
   }
 
   /**
@@ -52,7 +55,7 @@ export class PointsService {
    */
   async createTransaction(userId: string, data: CreateTransactionRequest): Promise<ApiResponse<PointTransaction>> {
     return withErrorHandling(() =>
-      apiClient.post<PointTransaction>(`/api/points/transactions/${userId}`, data)
+      apiClient.post<PointTransaction>(`/api/points/transactions`, data)
     );
   }
 
@@ -61,7 +64,7 @@ export class PointsService {
    */
   async exchangeRewards(userId: string, data: ExchangeRewardsRequest): Promise<ApiResponse<PointTransaction>> {
     return withErrorHandling(() =>
-      apiClient.post<PointTransaction>(`/api/points/exchange/${userId}`, data)
+      apiClient.post<PointTransaction>(`/api/points/exchange`, data)
     );
   }
 
@@ -75,8 +78,9 @@ export class PointsService {
   /**
    * 获取等级统计信息
    */
-  async getLevelStats(userId: string): Promise<ApiResponse<LevelStats>> {
-    return withErrorHandling(() => apiClient.get<LevelStats>(`/api/points/stats/${userId}`));
+  async getLevelStats(userId?: string): Promise<ApiResponse<LevelStats>> {
+    // 用户ID从认证token中获取，不需要在URL中传递
+    return withErrorHandling(() => apiClient.get<LevelStats>(`/api/points/stats`));
   }
 
   /**

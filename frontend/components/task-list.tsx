@@ -21,7 +21,7 @@ export function TaskList() {
   const weeklyTasks = useWeeklyTasks()
   const { fetchTodayTasks, fetchWeeklyTasks, completeTask, uncompleteTask, fetchTasks, isLoading, error } = useTaskStore()
   const currentUser = useCurrentUser()
-  const { fetchUserPoints, fetchLevelStats } = usePointsStore()
+  const { fetchUserPoints } = usePointsStore()
 
   // 组件加载时获取任务数据
   useEffect(() => {
@@ -49,7 +49,7 @@ export function TaskList() {
             fetchTodayTasks(),
             fetchWeeklyTasks(),
             fetchTasks(true), // 刷新主任务列表
-            ...(currentUser?.id ? [fetchUserPoints(currentUser.id), fetchLevelStats(currentUser.id)] : [])
+            ...(currentUser?.id ? [fetchUserPoints(currentUser.id)] : [])
           ])
 
           toast.success(`任务"${task.title}"已取消完成，扣除相应星币和经验`)
@@ -65,7 +65,7 @@ export function TaskList() {
             fetchTodayTasks(),
             fetchWeeklyTasks(),
             fetchTasks(true), // 刷新主任务列表
-            ...(currentUser?.id ? [fetchUserPoints(currentUser.id), fetchLevelStats(currentUser.id)] : [])
+            ...(currentUser?.id ? [fetchUserPoints(currentUser.id)] : [])
           ])
 
           // 显示完整的奖励信息
@@ -88,7 +88,7 @@ export function TaskList() {
         await Promise.all([
           fetchTodayTasks(),
           fetchWeeklyTasks(),
-          ...(currentUser?.id ? [fetchUserPoints(currentUser.id), fetchLevelStats(currentUser.id)] : [])
+          ...(currentUser?.id ? [fetchUserPoints(currentUser.id)] : [])
         ])
       } else if (error.message === "今天没有完成过这个任务") {
         toast.info("该任务今天还没有完成过！")
@@ -96,7 +96,7 @@ export function TaskList() {
         await Promise.all([
           fetchTodayTasks(),
           fetchWeeklyTasks(),
-          ...(currentUser?.id ? [fetchUserPoints(currentUser.id), fetchLevelStats(currentUser.id)] : [])
+          ...(currentUser?.id ? [fetchUserPoints(currentUser.id)] : [])
         ])
       } else {
         toast.error("操作失败，请重试")
