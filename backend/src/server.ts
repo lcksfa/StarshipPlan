@@ -6,11 +6,13 @@ import { createRequestLogger } from './utils/logger';
 import { errorHandler, notFoundHandler, setupProcessHandlers } from './middleware/errorHandler';
 import { sanitizeRequest } from './middleware/validation';
 import { testConnection, disconnectDatabase } from './lib/database';
+import { createServer } from 'http';
 
-// 导入路由（稍后创建）
-// import authRoutes from './routes/auth';
-// import userRoutes from './routes/users';
-// import taskRoutes from './routes/tasks';
+// 导入路由
+import taskRoutes from './routes/tasks';
+import pointsRoutes from './routes/points';
+import punishmentRoutes from './routes/punishments';
+import { initializeSyncRoutes } from './routes/sync';
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -79,14 +81,18 @@ app.get('/api', (req, res) => {
       auth: '/api/auth',
       users: '/api/users',
       tasks: '/api/tasks',
+      points: '/api/points',
+      punishments: '/api/punishments',
+      sync: '/api/sync',
     },
   });
 });
 
-// 注册路由（暂时注释掉，后续实现）
-// app.use('/api/auth', authRoutes);
-// app.use('/api/users', userRoutes);
-// app.use('/api/tasks', taskRoutes);
+// 注册路由
+app.use('/api/tasks', taskRoutes);
+app.use('/api/points', pointsRoutes);
+app.use('/api/punishments', punishmentRoutes);
+// 同步路由将在服务器启动时初始化并注册
 
 // 404 处理
 app.use(notFoundHandler);
@@ -103,13 +109,21 @@ async function startServer() {
       throw new Error('数据库连接失败');
     }
 
+    // 创建 HTTP 服务器用于 WebSocket
+    const httpServer = createServer(app);
+
+    // 初始化同步路由并注册
+    const syncRoutes = initializeSyncRoutes(httpServer);
+    app.use('/api/sync', syncRoutes);
+
     // 启动 HTTP 服务器
-    const server = app.listen(PORT, () => {
+    const server = httpServer.listen(PORT, () => {
       console.log(`🚀 StarshipPlan API 服务器已启动`);
       console.log(`📍 服务地址: http://localhost:${PORT}`);
       console.log(`🏥 健康检查: http://localhost:${PORT}/health`);
       console.log(`📚 API 文档: http://localhost:${PORT}/api`);
       console.log(`🌍 环境: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🔌 WebSocket 支持: 已启用`);
     });
 
     // 优雅关闭处理
