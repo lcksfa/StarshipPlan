@@ -94,6 +94,17 @@ router.get(
 );
 
 /**
+ * @route   GET /api/tasks/weekly
+ * @desc    获取周任务
+ * @access  Private
+ */
+router.get(
+  '/weekly',
+  authenticate,
+  asyncHandler(taskController.getWeeklyTasks.bind(taskController))
+);
+
+/**
  * @route   GET /api/tasks/templates
  * @desc    获取任务模板
  * @access  Private (PARENT only)

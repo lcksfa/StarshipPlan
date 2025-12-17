@@ -627,4 +627,60 @@ export class TaskService {
       todayCompletion: task.completions[0] || null,
     }));
   }
+
+  /**
+   * 获取本周任务
+   */
+  async getWeeklyTasks(userId: string) {
+    // 获取当前周的开始（周一0点）和结束（周日23:59:59）
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=周日, 1=周一...
+    const startOfWeek = new Date(today);
+    const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // 调整到周一
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    // 先获取用户的所有子女ID
+    const children = await prisma.user.findMany({
+      where: { parentId: userId },
+      select: { id: true },
+    });
+
+    const childrenIds = children.map(child => child.id);
+    const allUserIds = [userId, ...childrenIds];
+
+    // 获取所有活跃的周任务
+    const weeklyTasks = await prisma.task.findMany({
+      where: {
+        isActive: true,
+        type: 'WEEKLY',
+        createdBy: { in: allUserIds },
+      },
+      include: {
+        completions: {
+          where: {
+            userId,
+            completedAt: {
+              gte: startOfWeek,
+              lte: endOfWeek,
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'asc',
+      },
+    });
+
+    // 标记本周是否已完成
+    return weeklyTasks.map(task => ({
+      ...task,
+      isCompletedThisWeek: task.completions.length > 0,
+      weekCompletion: task.completions[0] || null,
+    }));
+  }
 }

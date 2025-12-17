@@ -221,6 +221,22 @@ export class TaskController {
   }
 
   /**
+   * 获取周任务
+   */
+  async getWeeklyTasks(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return errorResponse(res, '用户未认证', 401);
+      }
+
+      const tasks = await this.taskService.getWeeklyTasks(req.user.id);
+      return successResponse(res, tasks, '获取周任务成功');
+    } catch (error) {
+      return this.handleError(res, error);
+    }
+  }
+
+  /**
    * 批量完成任务
    */
   async batchCompleteTasks(req: AuthRequest, res: Response) {
