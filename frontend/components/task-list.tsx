@@ -9,6 +9,8 @@ import { Calendar, Repeat, Sparkles, Plus, Zap } from "lucide-react"
 import { toast } from "sonner"
 import { AddTaskDialog } from "./add-task-dialog"
 import { useTodayTasks, useWeeklyTasks, useTaskStore } from "@/store/taskStore"
+import { useCurrentUser } from "@/store/userStore"
+import { usePointsStore } from "@/store/pointsStore"
 import { Task } from "@/types/api"
 
 export function TaskList() {
@@ -18,6 +20,8 @@ export function TaskList() {
   const dailyTasks = useTodayTasks()
   const weeklyTasks = useWeeklyTasks()
   const { fetchTodayTasks, fetchWeeklyTasks, completeTask, uncompleteTask, fetchTasks, isLoading, error } = useTaskStore()
+  const currentUser = useCurrentUser()
+  const { fetchUserPoints, fetchLevelStats } = usePointsStore()
 
   // 组件加载时获取任务数据
   useEffect(() => {
@@ -40,14 +44,15 @@ export function TaskList() {
         // 如果任务已完成，则取消完成
         const result = await uncompleteTask(taskId)
         if (result) {
-          // 刷新任务列表和积分数据
+          // 刷新任务列表、积分和等级数据
           await Promise.all([
             fetchTodayTasks(),
             fetchWeeklyTasks(),
-            fetchTasks(true) // 刷新主任务列表
+            fetchTasks(true), // 刷新主任务列表
+            ...(currentUser?.id ? [fetchUserPoints(currentUser.id), fetchLevelStats(currentUser.id)] : [])
           ])
 
-          toast.success(`任务"${task.title}"已取消完成，扣除相应星币`)
+          toast.success(`任务"${task.title}"已取消完成，扣除相应星币和经验`)
         } else {
           toast.error("取消完成任务失败，请重试")
         }
@@ -55,11 +60,12 @@ export function TaskList() {
         // 如果任务未完成，则完成任务
         const completion = await completeTask(taskId)
         if (completion) {
-          // 刷新任务列表和积分数据
+          // 刷新任务列表、积分和等级数据
           await Promise.all([
             fetchTodayTasks(),
             fetchWeeklyTasks(),
-            fetchTasks(true) // 刷新主任务列表
+            fetchTasks(true), // 刷新主任务列表
+            ...(currentUser?.id ? [fetchUserPoints(currentUser.id), fetchLevelStats(currentUser.id)] : [])
           ])
 
           // 显示完整的奖励信息
@@ -78,17 +84,19 @@ export function TaskList() {
       // 处理特定错误消息
       if (error.message === "今天已经完成过这个任务了") {
         toast.info("该任务今天已经完成了！")
-        // 刷新任务列表以同步状态
+        // 刷新任务列表和等级数据以同步状态
         await Promise.all([
           fetchTodayTasks(),
-          fetchWeeklyTasks()
+          fetchWeeklyTasks(),
+          ...(currentUser?.id ? [fetchUserPoints(currentUser.id), fetchLevelStats(currentUser.id)] : [])
         ])
       } else if (error.message === "今天没有完成过这个任务") {
         toast.info("该任务今天还没有完成过！")
-        // 刷新任务列表以同步状态
+        // 刷新任务列表和等级数据以同步状态
         await Promise.all([
           fetchTodayTasks(),
-          fetchWeeklyTasks()
+          fetchWeeklyTasks(),
+          ...(currentUser?.id ? [fetchUserPoints(currentUser.id), fetchLevelStats(currentUser.id)] : [])
         ])
       } else {
         toast.error("操作失败，请重试")
