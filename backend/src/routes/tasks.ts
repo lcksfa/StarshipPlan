@@ -192,24 +192,22 @@ router.delete(
 /**
  * @route   POST /api/tasks/:id/complete
  * @desc    完成任务
- * @access  Private (CHILD only)
+ * @access  Private (CHILD or PARENT for demo)
  */
 router.post(
   '/:id/complete',
   authenticate,
-  authorize(['CHILD']),
   asyncHandler(taskController.completeTask.bind(taskController))
 );
 
 /**
  * @route   POST /api/tasks/batch-complete
  * @desc    批量完成任务
- * @access  Private (CHILD only)
+ * @access  Private (CHILD or PARENT for demo)
  */
 router.post(
   '/batch-complete',
   authenticate,
-  authorize(['CHILD']),
   validateRequest([
     body('taskIds')
       .isArray()
