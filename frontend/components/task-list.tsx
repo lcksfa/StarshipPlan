@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Calendar, Repeat, Sparkles, Plus } from "lucide-react"
+import { Calendar, Repeat, Sparkles, Plus, Zap } from "lucide-react"
 import { toast } from "sonner"
 import { AddTaskDialog } from "./add-task-dialog"
 import { useTodayTasks, useWeeklyTasks, useTaskStore } from "@/store/taskStore"
@@ -62,7 +62,12 @@ export function TaskList() {
             fetchTasks(true) // 刷新主任务列表
           ])
 
-          toast.success(`任务"${task.title}"完成！获得 ${task.starCoins} 星币`)
+          // 显示完整的奖励信息
+          const expGained = completion.expGained || (task.type === 'DAILY' ? 10 : 50)
+          const bonusMultiplier = completion.bonusMultiplier || 1.0
+          const bonusText = bonusMultiplier > 1 ? ` (含${Math.round((bonusMultiplier - 1) * 100)}%连击奖励!)` : ''
+
+          toast.success(`任务"${task.title}"完成！获得 ${task.starCoins} 星币 + ${expGained} 经验${bonusText}`)
         } else {
           toast.error("完成任务失败，请重试")
         }
@@ -146,12 +151,20 @@ export function TaskList() {
                       </p>
                     )}
                   </div>
-                  <Badge
-                    variant="secondary"
-                    className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 flex-shrink-0 text-xs sm:text-sm"
-                  >
-                    <Sparkles className="w-3 h-3" />+{task.starCoins}
-                  </Badge>
+                  <div className="flex flex-col gap-1">
+                    <Badge
+                      variant="secondary"
+                      className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 flex-shrink-0 text-xs sm:text-sm"
+                    >
+                      <Sparkles className="w-3 h-3" />+{task.starCoins}
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 flex items-center gap-1 flex-shrink-0 text-xs"
+                    >
+                      <Zap className="w-3 h-3" />+{task.type === 'DAILY' ? 10 : 50} EXP
+                    </Badge>
+                  </div>
                 </div>
               ))
             )}
@@ -203,12 +216,20 @@ export function TaskList() {
                       {task.title}
                     </p>
                   </div>
-                  <Badge
-                    variant="secondary"
-                    className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 flex-shrink-0 text-xs sm:text-sm"
-                  >
-                    <Sparkles className="w-3 h-3" />+{task.starCoins}
-                  </Badge>
+                  <div className="flex flex-col gap-1">
+                    <Badge
+                      variant="secondary"
+                      className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 flex-shrink-0 text-xs sm:text-sm"
+                    >
+                      <Sparkles className="w-3 h-3" />+{task.starCoins}
+                    </Badge>
+                    <Badge
+                      variant="outline"
+                      className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 flex items-center gap-1 flex-shrink-0 text-xs"
+                    >
+                      <Zap className="w-3 h-3" />+{task.type === 'DAILY' ? 10 : 50} EXP
+                    </Badge>
+                  </div>
                 </div>
               ))
             )}

@@ -292,6 +292,14 @@ export class TaskService {
       }
     }
 
+    // 根据任务类型自动设置经验值
+    let baseExpGained = task.expReward;
+    if (task.type === 'DAILY') {
+      baseExpGained = 10; // 每日任务10点经验
+    } else if (task.type === 'WEEKLY') {
+      baseExpGained = 50; // 每周任务50点经验
+    }
+
     // 计算连击奖励
     let streak = 0;
     let bonusMultiplier = 1.0;
@@ -322,7 +330,7 @@ export class TaskService {
 
     // 计算实际获得的星币和经验值
     const actualStarCoins = Math.round(task.starCoins * bonusMultiplier);
-    const actualExpGained = Math.round(task.expReward * bonusMultiplier);
+    const actualExpGained = Math.round(baseExpGained * bonusMultiplier);
 
     // 开始事务处理
     const result = await prisma.$transaction(async (tx) => {

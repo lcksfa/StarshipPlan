@@ -56,12 +56,28 @@ export function ShipStatus() {
           <p className="text-xs text-primary font-medium">{rankTitle}</p>
         </div>
 
-        {/* 简化的状态区域 */}
-        <div className="pt-2 border-t border-border/20">
-          <div className="text-center py-2">
-            <p className="text-sm text-muted-foreground">星舰运行正常</p>
-            <p className="text-xs text-muted-foreground mt-1">准备执行今日任务</p>
+        {/* 经验值进度条 */}
+        <div className="pt-3 border-t border-border/20">
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-muted-foreground">经验值</span>
+              <span className="text-xs font-medium">{currentLevel?.exp || 0}/100</span>
+            </div>
+            <div className="w-full bg-primary/10 rounded-full h-2 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-primary/60 to-primary/20 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${((currentLevel?.exp || 0) % 100)}%` }}
+              ></div>
+            </div>
+            <p className="text-xs text-center text-muted-foreground">
+              距离升级还需 {100 - ((currentLevel?.exp || 0) % 100)} 点经验
+            </p>
           </div>
+        </div>
+
+        <div className="text-center py-2">
+          <p className="text-sm text-muted-foreground">星舰运行正常</p>
+          <p className="text-xs text-muted-foreground mt-1">准备执行今日任务</p>
         </div>
       </CardContent>
     </Card>

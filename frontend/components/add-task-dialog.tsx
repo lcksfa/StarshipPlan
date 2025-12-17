@@ -43,11 +43,14 @@ export function AddTaskDialog({ open, onOpenChange }: AddTaskDialogProps) {
     setIsSubmitting(true)
 
     try {
+      // 根据任务类型自动设置经验值
+      const expReward = taskType === 'daily' ? 10 : 50;
+
       const taskData = {
         title: taskTitle.trim(),
         type: taskType.toUpperCase() as 'DAILY' | 'WEEKLY',
         starCoins: parseInt(starCoins, 10),
-        expReward: Math.floor(parseInt(starCoins, 10) / 2), // 经验值为星币的一半
+        expReward: expReward, // 每日任务10exp，每周任务50exp
         description: "",
         frequency: taskType === 'daily' ? 'DAILY' : 'WEEKLY',
         difficulty: 'MEDIUM' as const,
