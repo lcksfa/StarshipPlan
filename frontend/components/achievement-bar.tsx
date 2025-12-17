@@ -23,6 +23,15 @@ export function AchievementBar() {
   // 从真实数据获取信息，如果没有数据则显示默认值
   const starCoins = totalStarCoins || 0
 
+  // 添加调试信息
+  console.log('成就进度组件数据:', {
+    currentUser: currentUser?.id,
+    totalStarCoins,
+    currentLevel,
+    currentExp: currentLevel?.exp,
+    starCoinsFromComponent: starCoins
+  });
+
   // 使用当前等级系统：每100点经验升一级
   let currentExp = 0
   let progress = 0

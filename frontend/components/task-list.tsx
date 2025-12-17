@@ -45,12 +45,21 @@ export function TaskList() {
         const result = await uncompleteTask(taskId)
         if (result) {
           // 刷新任务列表、积分和等级数据
-          await Promise.all([
+          console.log('任务完成后刷新数据，当前用户:', currentUser);
+          const refreshTasks = [
             fetchTodayTasks(),
             fetchWeeklyTasks(),
             fetchTasks(true), // 刷新主任务列表
-            ...(currentUser?.id ? [fetchUserPoints(currentUser.id)] : [])
-          ])
+          ];
+
+          if (currentUser?.id) {
+            console.log('调用fetchUserPoints，用户ID:', currentUser.id);
+            refreshTasks.push(fetchUserPoints(currentUser.id));
+          } else {
+            console.error('当前用户ID为空，无法刷新积分数据');
+          }
+
+          await Promise.all(refreshTasks);
 
           toast.success(`任务"${task.title}"已取消完成，扣除相应星币和经验`)
         } else {
@@ -61,12 +70,21 @@ export function TaskList() {
         const completion = await completeTask(taskId)
         if (completion) {
           // 刷新任务列表、积分和等级数据
-          await Promise.all([
+          console.log('任务完成时刷新数据，当前用户:', currentUser);
+          const refreshTasks = [
             fetchTodayTasks(),
             fetchWeeklyTasks(),
             fetchTasks(true), // 刷新主任务列表
-            ...(currentUser?.id ? [fetchUserPoints(currentUser.id)] : [])
-          ])
+          ];
+
+          if (currentUser?.id) {
+            console.log('调用fetchUserPoints，用户ID:', currentUser.id);
+            refreshTasks.push(fetchUserPoints(currentUser.id));
+          } else {
+            console.error('当前用户ID为空，无法刷新积分数据');
+          }
+
+          await Promise.all(refreshTasks);
 
           // 显示完整的奖励信息
           const expGained = completion.expGained || (task.type === 'DAILY' ? 10 : 50)
