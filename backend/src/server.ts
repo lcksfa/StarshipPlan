@@ -12,7 +12,7 @@ import { createServer } from 'http';
 import taskRoutes from './routes/tasks';
 import pointsRoutes from './routes/points';
 import punishmentRoutes from './routes/punishments';
-import { initializeSyncRoutes } from './routes/sync';
+import initializeSyncRoutes from './routes/sync';
 
 const app = express();
 const PORT = process.env.PORT || 8000;

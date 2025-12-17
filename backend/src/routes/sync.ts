@@ -145,3 +145,6 @@ function createSyncRoutes(): Router {
 
   return router;
 }
+
+// 默认导出初始化函数
+export default initializeSyncRoutes;
