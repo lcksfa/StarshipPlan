@@ -1,29 +1,66 @@
 import { Request, Response, NextFunction } from 'express';
 import { verifyToken } from '../utils/jwt';
+import { mockAuthenticate } from '../utils/mockAuth';
 import { AuthRequest, AppError } from '../types';
 import { unauthorizedResponse, forbiddenResponse } from '../utils/response';
 import prisma from '../lib/database';
 
 /**
- * 身份验证中间件
+ * 身份验证中间件 - 简化版（家庭项目）
  */
 export function authenticate(req: AuthRequest, res: Response, next: NextFunction): void {
+  // 简化的家庭身份验证 - 只要有Bearer token就通过
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    unauthorizedResponse(res, '缺少授权令牌');
+    return;
+  }
+
+  const token = authHeader.substring(7);
+
+  if (!token) {
+    unauthorizedResponse(res, '无效的授权令牌格式');
+    return;
+  }
+
+  // 家庭项目简化身份验证：任何有效的token都自动设置默认用户
+  if (token.startsWith('mock-parent-token') || token.startsWith('mock-token-')) {
+    // 设置默认家长用户
+    req.user = {
+      id: 'parent-1',
+      username: 'parent',
+      displayName: '家长',
+      avatar: null,
+      role: 'PARENT',
+      parentId: null,
+      password: 'password',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    next();
+    return;
+  }
+
+  if (token.startsWith('mock-child-token')) {
+    // 设置默认儿童用户
+    req.user = {
+      id: 'child-1',
+      username: 'child',
+      displayName: '葫芦',
+      avatar: null,
+      role: 'CHILD',
+      parentId: 'parent-1',
+      password: 'password',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    next();
+    return;
+  }
+
+  // 对于其他token，尝试JWT验证
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      unauthorizedResponse(res, '缺少授权令牌');
-      return;
-    }
-
-    const token = authHeader.substring(7); // 移除 'Bearer ' 前缀
-
-    if (!token) {
-      unauthorizedResponse(res, '无效的授权令牌格式');
-      return;
-    }
-
-    // 验证令牌
     const payload = verifyToken(token);
 
     // 从数据库获取用户信息
@@ -47,7 +84,6 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
           return;
         }
 
-        // 将用户信息附加到请求对象
         req.user = user;
         next();
       })
@@ -56,11 +92,7 @@ export function authenticate(req: AuthRequest, res: Response, next: NextFunction
         unauthorizedResponse(res, '用户验证失败');
       });
   } catch (error) {
-    if (error instanceof Error) {
-      unauthorizedResponse(res, error.message);
-    } else {
-      unauthorizedResponse(res, '身份验证失败');
-    }
+    unauthorizedResponse(res, '无效的令牌');
   }
 }
 
