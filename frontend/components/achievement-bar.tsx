@@ -1,14 +1,49 @@
 "use client"
 
+import { useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Coins, TrendingUp } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
+import { useCurrentUser } from "@/store/userStore"
+import { useTotalStarCoins, useCurrentLevel, useLevelStats, usePointsStore } from "@/store/pointsStore"
 
 export function AchievementBar() {
-  const starCoins = 128
-  const currentExp = 750
-  const nextLevelExp = 1000
-  const progress = (currentExp / nextLevelExp) * 100
+  const currentUser = useCurrentUser()
+  const totalStarCoins = useTotalStarCoins()
+  const currentLevel = useCurrentLevel()
+  const levelStats = useLevelStats()
+  const { fetchUserPoints, fetchLevelStats } = usePointsStore()
+
+  // 组件加载时获取用户积分和等级数据
+  useEffect(() => {
+    if (currentUser?.id) {
+      fetchUserPoints(currentUser.id)
+      fetchLevelStats(currentUser.id)
+    }
+  }, [currentUser?.id, fetchUserPoints, fetchLevelStats])
+
+  // 从真实数据获取信息，如果没有数据则显示默认值
+  const starCoins = totalStarCoins || 0
+
+  // 使用 levelStats 或 currentLevel 来获取经验值
+  let currentExp = 0
+  let nextLevelExp = 1000
+  let progress = 0
+
+  if (levelStats) {
+    currentExp = levelStats.currentExp
+    nextLevelExp = levelStats.expToNext
+    progress = levelStats.progressPercentage
+  } else if (currentLevel) {
+    currentExp = currentLevel.exp
+    nextLevelExp = currentLevel.expToNext || 1000
+    progress = nextLevelExp > 0 ? (currentExp / nextLevelExp) * 100 : 0
+  } else {
+    // 默认值
+    currentExp = 0
+    nextLevelExp = 1000
+    progress = 0
+  }
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm border-accent/30 shadow-lg shadow-accent/20">

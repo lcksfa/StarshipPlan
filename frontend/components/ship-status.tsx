@@ -1,11 +1,27 @@
 "use client"
 
+import { useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Rocket } from "lucide-react"
+import { useCurrentUser, useUserStore } from "@/store/userStore"
+import { useCurrentLevel, usePointsStore } from "@/store/pointsStore"
 
 export function ShipStatus() {
-  const level = 3
-  const shipName = "探索者号"
+  const currentUser = useCurrentUser()
+  const currentLevel = useCurrentLevel()
+  const { fetchUserPoints } = usePointsStore()
+
+  // 组件加载时获取用户等级数据
+  useEffect(() => {
+    if (currentUser?.id) {
+      fetchUserPoints(currentUser.id)
+    }
+  }, [currentUser?.id, fetchUserPoints])
+
+  // 从真实数据获取信息，如果没有数据则显示默认值
+  const level = currentLevel?.level || 1
+  const shipName = currentUser?.displayName || currentUser?.username || "探索者号"
+  const rankTitle = currentLevel?.rankTitle || "见习宇航员"
 
   return (
     <Card className="bg-card/80 backdrop-blur-sm border-primary/30 shadow-lg shadow-primary/20">
@@ -37,6 +53,7 @@ export function ShipStatus() {
         <div className="text-center space-y-1">
           <p className="text-xl sm:text-2xl font-bold text-accent">{shipName}</p>
           <p className="text-xs sm:text-sm text-muted-foreground">等级 {level} 星舰</p>
+          <p className="text-xs sm:text-sm text-primary font-medium">{rankTitle}</p>
         </div>
       </CardContent>
     </Card>
