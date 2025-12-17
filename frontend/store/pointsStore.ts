@@ -106,9 +106,24 @@ export const usePointsStore = create<PointsState>()(
 
           const response = await service.getUserPoints(userId);
           if (response.success && response.data) {
+            // 将后端返回的数据转换为前端期望的格式
+            const totalStarCoins = response.data.starCoins || 0;
+            const currentLevel = {
+              level: response.data.level || 1,
+              title: response.data.title || '见习宇航员',
+              rankTitle: response.data.title || '见习宇航员',
+              exp: response.data.currentExp || 0,
+              totalExp: response.data.totalExp || 0,
+              shipName: response.data.shipName || '探索者号',
+              promotedAt: new Date().toISOString(),
+              userId: userId
+            };
+
+            console.log('更新用户数据:', { totalStarCoins, currentLevel, responseData: response.data });
+
             set({
-              totalStarCoins: response.data.totalStarCoins,
-              currentLevel: response.data.level
+              totalStarCoins,
+              currentLevel
             });
           }
         } catch (error) {
