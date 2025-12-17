@@ -4,36 +4,64 @@ import { useState, useEffect } from "react"
 import { SpaceBackground } from "@/components/space-background"
 import { LoginScreen } from "@/components/login-screen"
 import { Dashboard } from "@/components/dashboard"
+import { authManager } from "@/lib/auth"
+import { useUserStore } from "@/store/userStore"
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [username, setUsername] = useState("")
+  const { setUser, setLoading } = useUserStore()
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("starship_user")
-    if (savedUser) {
-      setUsername(savedUser)
-      setIsLoggedIn(true)
-    }
-  }, [])
+    // 初始化认证状态
+    const initAuth = async () => {
+      setLoading(true)
 
-  const handleLogin = (name: string) => {
-    setUsername(name)
-    setIsLoggedIn(true)
-    localStorage.setItem("starship_user", name)
+      if (authManager.isAuthenticated()) {
+        const currentUser = authManager.getCurrentUser()
+        if (currentUser) {
+          setUser(currentUser)
+          setIsLoggedIn(true)
+        }
+      }
+
+      setLoading(false)
+    }
+
+    initAuth()
+  }, [setUser, setLoading])
+
+  const handleLogin = async (name: string) => {
+    setLoading(true)
+
+    // 简单登录逻辑：根据名字判断用户类型
+    const success = await authManager.login(name, "password") // 密码在此简化处理
+
+    if (success) {
+      const currentUser = authManager.getCurrentUser()
+      if (currentUser) {
+        setUser(currentUser)
+        setIsLoggedIn(true)
+      }
+    }
+
+    setLoading(false)
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    setLoading(true)
+
+    authManager.logout()
+    setUser(null)
     setIsLoggedIn(false)
-    setUsername("")
-    localStorage.removeItem("starship_user")
+
+    setLoading(false)
   }
 
   return (
     <main className="relative min-h-screen overflow-hidden">
       <SpaceBackground />
 
-      {!isLoggedIn ? <LoginScreen onLogin={handleLogin} /> : <Dashboard username={username} onLogout={handleLogout} />}
+      {!isLoggedIn ? <LoginScreen onLogin={handleLogin} /> : <Dashboard username={authManager.getCurrentUser()?.displayName || ""} onLogout={handleLogout} />}
     </main>
   )
 }
