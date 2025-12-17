@@ -1,4 +1,5 @@
 import { ApiResponse, PaginatedResponse, ApiError } from '../types/api';
+import { authManager } from './auth';
 
 // API 客户端配置
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
@@ -24,6 +25,8 @@ class ApiClient {
     const headers = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      // 添加身份验证头
+      ...authManager.getAuthHeaders(),
       ...options.headers,
     };
 

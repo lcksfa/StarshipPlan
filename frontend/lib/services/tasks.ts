@@ -51,7 +51,7 @@ export class TasksService {
    * 完成任务
    */
   async completeTask(data: CompleteTaskRequest): Promise<ApiResponse<TaskCompletion>> {
-    return withErrorHandling(() => apiClient.post<TaskCompletion>('/api/tasks/complete', data));
+    return withErrorHandling(() => apiClient.post<TaskCompletion>(`/api/tasks/${data.taskId}/complete`, {}));
   }
 
   /**

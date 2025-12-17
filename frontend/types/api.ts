@@ -37,6 +37,11 @@ export interface Task {
   starCoins: number;
   expReward: number;
   isActive: boolean;
+  frequency: 'DAILY' | 'WEEKLY' | 'WEEKDAYS' | 'WEEKENDS' | 'CUSTOM';
+  weekdays?: number[];
+  timeLimit?: string;
+  category?: string;
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
   createdBy: string;
   createdAt: string;
   updatedAt: string;
@@ -118,6 +123,11 @@ export interface CreateTaskRequest {
   type?: 'DAILY' | 'WEEKLY' | 'CUSTOM';
   starCoins?: number;
   expReward?: number;
+  frequency?: 'DAILY' | 'WEEKLY' | 'WEEKDAYS' | 'WEEKENDS' | 'CUSTOM';
+  weekdays?: number[];
+  timeLimit?: string;
+  category?: string;
+  difficulty?: 'EASY' | 'MEDIUM' | 'HARD';
 }
 
 export interface UpdateTaskRequest extends Partial<CreateTaskRequest> {
