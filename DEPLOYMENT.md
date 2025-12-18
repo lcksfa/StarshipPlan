@@ -302,7 +302,19 @@ ps aux | grep -E "(next|server)" | grep -v grep
 
 ### 常见问题
 
-**1. 端口被占用**
+**1. Prisma OpenSSL 兼容性错误**
+```bash
+# 错误信息：Error loading shared library libssl.so.1.1
+# 解决方案：
+./scripts/fix-prisma.sh
+
+# 手动修复：
+cd backend
+rm -rf node_modules/.prisma node_modules/@prisma/client
+npx prisma generate
+```
+
+**2. 端口被占用**
 ```bash
 # 错误信息：Error: listen EADDRINUSE :::3000
 # 解决方案：
@@ -310,7 +322,7 @@ sudo lsof -ti:3000 | xargs kill -9
 sudo lsof -ti:8000 | xargs kill -9
 ```
 
-**2. 数据库连接失败**
+**3. 数据库连接失败**
 ```bash
 # 确保数据库目录存在
 mkdir -p backend/data
