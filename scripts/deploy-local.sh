@@ -96,7 +96,7 @@ start_backend() {
     export DATABASE_URL="file:$PROJECT_DIR/backend/data/starship-plan.db"
     export JWT_SECRET="starship-plan-local-secret"
     export LAN_IP=$(get_lan_ip)
-    export CORS_ORIGIN="http://$LAN_IP:3000,http://localhost:3000"
+    export ALLOWED_ORIGINS="http://$LAN_IP:3000,http://localhost:3000,http://127.0.0.1:3000"
 
     # 创建必要目录
     mkdir -p data logs backups
@@ -141,7 +141,7 @@ start_frontend() {
 
     # 构建前端（如果需要）
     if [ ! -d ".next" ]; then
-        echo -e "${BLUE}�� 构建前端应用...${NC}"
+        echo -e "${BLUE}构建前端应用...${NC}"
         npm run build
     fi
 

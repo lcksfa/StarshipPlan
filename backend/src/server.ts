@@ -116,10 +116,14 @@ async function startServer() {
     const syncRoutes = initializeSyncRoutes(httpServer);
     app.use('/api/sync', syncRoutes);
 
-    // 启动 HTTP 服务器
-    const server = httpServer.listen(PORT, () => {
+    // 启动 HTTP 服务器，绑定到所有网络接口
+    const server = httpServer.listen({
+      port: PORT,
+      host: '0.0.0.0'
+    }, () => {
       console.log(`🚀 StarshipPlan API 服务器已启动`);
       console.log(`📍 服务地址: http://localhost:${PORT}`);
+      console.log(`🌐 局域网地址: http://0.0.0.0:${PORT}`);
       console.log(`🏥 健康检查: http://localhost:${PORT}/health`);
       console.log(`📚 API 文档: http://localhost:${PORT}/api`);
       console.log(`🌍 环境: ${process.env.NODE_ENV || 'development'}`);
