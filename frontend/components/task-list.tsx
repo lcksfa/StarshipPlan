@@ -26,6 +26,7 @@ import { Task } from "@/types/api"
 
 export function TaskList() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [defaultTaskType, setDefaultTaskType] = useState<"daily" | "weekly">("daily")
 
   // 使用真实的 store 数据
   const dailyTasks = useTodayTasks()
@@ -170,7 +171,10 @@ export function TaskList() {
               每日任务
             </CardTitle>
             <Button
-              onClick={() => setIsDialogOpen(true)}
+              onClick={() => {
+                setDefaultTaskType("daily")
+                setIsDialogOpen(true)
+              }}
               size="sm"
               variant="outline"
               className="h-8 px-3 border-primary/50 hover:bg-primary/10 hover:border-primary"
@@ -269,7 +273,10 @@ export function TaskList() {
               每周任务
             </CardTitle>
             <Button
-              onClick={() => setIsDialogOpen(true)}
+              onClick={() => {
+                setDefaultTaskType("weekly")
+                setIsDialogOpen(true)
+              }}
               size="sm"
               variant="outline"
               className="h-8 px-3 border-primary/50 hover:bg-primary/10 hover:border-primary"
@@ -355,7 +362,7 @@ export function TaskList() {
         </Card>
       </div>
 
-      <AddTaskDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} />
+      <AddTaskDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} defaultTaskType={defaultTaskType} />
     </div>
   )
 }

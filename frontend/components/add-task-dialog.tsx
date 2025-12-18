@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Calendar, Repeat, Plus } from "lucide-react"
 import { useTaskStore } from "@/store/taskStore"
 import { toast } from "sonner"
 import { initializeApp } from "@/lib/init"
@@ -15,22 +16,24 @@ import { initializeApp } from "@/lib/init"
 type AddTaskDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  defaultTaskType?: "daily" | "weekly"
 }
 
-export function AddTaskDialog({ open, onOpenChange }: AddTaskDialogProps) {
+export function AddTaskDialog({ open, onOpenChange, defaultTaskType = "daily" }: AddTaskDialogProps) {
   const [taskTitle, setTaskTitle] = useState("")
-  const [taskType, setTaskType] = useState<"daily" | "weekly">("daily")
+  const [taskType, setTaskType] = useState<"daily" | "weekly">(defaultTaskType)
   const [starCoins, setStarCoins] = useState("10")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { createTask, fetchTodayTasks, fetchWeeklyTasks } = useTaskStore()
-
-  // 初始化身份验证
+  // 当弹窗打开或默认任务类型改变时，更新任务类型
   useEffect(() => {
     if (open) {
+      setTaskType(defaultTaskType)
       initializeApp().catch(console.error)
     }
-  }, [open])
+  }, [open, defaultTaskType])
+
+  const { createTask, fetchTodayTasks, fetchWeeklyTasks } = useTaskStore()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -91,8 +94,15 @@ export function AddTaskDialog({ open, onOpenChange }: AddTaskDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-card border-primary/30">
         <DialogHeader>
-          <DialogTitle className="text-primary">创建新任务</DialogTitle>
-          <DialogDescription>设置你的目标，赚取星币奖励</DialogDescription>
+          <DialogTitle className="text-primary">
+            创建{taskType === 'daily' ? '每日' : '每周'}任务
+          </DialogTitle>
+          <DialogDescription>
+            {taskType === 'daily'
+              ? '设置今天要完成的目标，获得即时奖励'
+              : '设置本周要达成的目标，获得丰厚奖励'
+            }
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -109,20 +119,21 @@ export function AddTaskDialog({ open, onOpenChange }: AddTaskDialogProps) {
 
           <div className="space-y-2">
             <Label>任务类型</Label>
-            <RadioGroup value={taskType} onValueChange={(v) => setTaskType(v as "daily" | "weekly")}>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="daily" id="daily" />
-                <Label htmlFor="daily" className="font-normal cursor-pointer">
-                  每日任务
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="weekly" id="weekly" />
-                <Label htmlFor="weekly" className="font-normal cursor-pointer">
-                  每周任务
-                </Label>
-              </div>
-            </RadioGroup>
+            <div className="flex items-center space-x-2 p-3 bg-muted/30 rounded-lg border">
+              {taskType === 'daily' ? (
+                <>
+                  <Calendar className="w-4 h-4 text-blue-500" />
+                  <span className="font-medium text-blue-600">每日任务</span>
+                  <span className="text-sm text-muted-foreground">今天完成，获得即时奖励</span>
+                </>
+              ) : (
+                <>
+                  <Repeat className="w-4 h-4 text-purple-500" />
+                  <span className="font-medium text-purple-600">每周任务</span>
+                  <span className="text-sm text-muted-foreground">本周完成，获得丰厚奖励</span>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="space-y-2">
