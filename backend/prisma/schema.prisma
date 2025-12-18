@@ -36,6 +36,7 @@ model Task {
   type        String             @default("DAILY")
   starCoins   Int                @default(10)
   expReward   Int                @default(5)
+  targetCount Int?               @default(1) // 每周任务的目标完成次数，每日任务默认为1
   isActive    Boolean            @default(true)
   createdBy   String
   createdAt   DateTime           @default(now())
@@ -61,6 +62,7 @@ model TaskCompletion {
   expGained       Int
   streak          Int?
   bonusMultiplier Float?   @default(1.0)
+  completionType  String   @default("SINGLE") // SINGLE: 单次完成(每日任务), INCREMENT: 增量完成(周任务)
   user            User     @relation(fields: [userId], references: [id])
   task            Task     @relation(fields: [taskId], references: [id])
 

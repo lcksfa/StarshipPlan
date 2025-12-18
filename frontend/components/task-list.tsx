@@ -129,33 +129,48 @@ export function TaskList() {
           const bonusText = bonusMultiplier > 1 ? ` (含${Math.round((bonusMultiplier - 1) * 100)}%连击奖励!)` : ''
 
           toast.success(`任务"${task.title}"完成！获得 ${task.starCoins} 星币 + ${expGained} 经验${bonusText}`)
-        } else {
-          toast.error("完成任务失败，请重试")
         }
       }
     } catch (error: any) {
       console.error("任务状态切换失败:", error)
 
-      // 处理特定错误消息
-      if (error.message === "今天已经完成过这个任务了") {
-        toast.info("该任务今天已经完成了！")
-        // 刷新任务列表和等级数据以同步状态
-        await Promise.all([
-          fetchTodayTasks(),
-          fetchWeeklyTasks(),
-          ...(currentUser?.id ? [fetchUserPoints(currentUser.id)] : [])
-        ])
-      } else if (error.message === "今天没有完成过这个任务") {
-        toast.info("该任务今天还没有完成过！")
-        // 刷新任务列表和等级数据以同步状态
-        await Promise.all([
-          fetchTodayTasks(),
-          fetchWeeklyTasks(),
-          ...(currentUser?.id ? [fetchUserPoints(currentUser.id)] : [])
-        ])
-      } else {
-        toast.error("操作失败，请重试")
+      // 显示具体的错误信息给用户
+      let errorMessage = "操作失败，请重试"
+      let isInfoMessage = false
+
+      if (error.message) {
+        // 处理各种特定的错误情况
+        if (error.message.includes("今天已经完成过这个任务了") || error.message.includes("今天已经完成过这个周任务了")) {
+          errorMessage = "该任务今天已经完成了！"
+          isInfoMessage = true
+        } else if (error.message.includes("今天没有完成过这个任务")) {
+          errorMessage = "该任务今天还没有完成过！"
+          isInfoMessage = true
+        } else if (error.message.includes("本周已完成该任务") || error.message.includes("无需继续完成")) {
+          errorMessage = error.message
+          isInfoMessage = true
+        } else if (error.message.includes("任务不存在或已停用")) {
+          errorMessage = "任务不存在或已被禁用"
+        } else if (error.message.includes("需要在")) {
+          errorMessage = error.message // 时间限制错误
+        } else {
+          errorMessage = error.message // 显示原始错误信息
+        }
       }
+
+      // 根据错误类型显示不同的提示
+      if (isInfoMessage) {
+        toast.info(errorMessage)
+      } else {
+        toast.error(errorMessage)
+      }
+
+      // 刷新任务列表以同步状态
+      await Promise.all([
+        fetchTodayTasks(),
+        fetchWeeklyTasks(),
+        ...(currentUser?.id ? [fetchUserPoints(currentUser.id)] : [])
+      ])
     }
   }
 
@@ -210,6 +225,12 @@ export function TaskList() {
                     >
                       {task.title}
                     </p>
+                    {/* 周任务进度显示 */}
+                    {task.type === 'WEEKLY' && task.targetCount && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        进度: {task.weeklyCompletedCount || 0} / {task.targetCount} 次
+                      </p>
+                    )}
                     {task.streak && (
                       <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                         <Sparkles className="w-3 h-3 text-accent" />
@@ -301,18 +322,50 @@ export function TaskList() {
                   key={task.id}
                   className="flex items-center gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
                 >
-                  <Checkbox
-                    checked={task.completed || task.isCompletedThisWeek}
-                    onCheckedChange={() => toggleTask(task.id)}
-                    className="border-blue-500 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 flex-shrink-0"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p
-                      className={`font-medium text-sm sm:text-base ${(task.completed || task.isCompletedThisWeek) ? "line-through text-muted-foreground" : "text-foreground"}`}
+                  {/* 周任务进度可视化 */}
+                  {task.type === 'WEEKLY' && task.targetCount ? (
+                    <div
+                      className="flex items-center gap-2 flex-1 cursor-pointer hover:bg-muted/50 p-1 rounded-md transition-colors"
+                      onClick={() => toggleTask(task.id)}
+                      title="点击完成一次任务"
                     >
-                      {task.title}
-                    </p>
-                  </div>
+                      <div>
+                        <p
+                          className={`font-medium text-sm sm:text-base ${(task.completed || task.isCompletedThisWeek) ? "line-through text-muted-foreground" : "text-foreground"}`}
+                        >
+                          {task.title}
+                        </p>
+                        <div className="mt-1">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 bg-muted rounded-full h-2">
+                              <div
+                                className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${Math.min((task.weeklyCompletedCount || 0) / task.targetCount * 100, 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-muted-foreground min-w-[40px]">
+                              {task.weeklyCompletedCount || 0}/{task.targetCount}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <Checkbox
+                      checked={task.completed || task.isCompletedThisWeek}
+                      onCheckedChange={() => toggleTask(task.id)}
+                      className="border-blue-500 data-[state=checked]:bg-blue-500 data-[state=checked]:border-blue-500 flex-shrink-0"
+                    />
+                  )}
+                  {task.type !== 'WEEKLY' && (
+                    <div className="flex-1 min-w-0">
+                      <p
+                        className={`font-medium text-sm sm:text-base ${(task.completed || task.isCompletedThisWeek) ? "line-through text-muted-foreground" : "text-foreground"}`}
+                      >
+                        {task.title}
+                      </p>
+                    </div>
+                  )}
                   <div className="flex flex-col gap-1">
                     <Badge
                       variant="secondary"

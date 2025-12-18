@@ -271,6 +271,8 @@ export const useTaskStore = create<TaskState>()(
           }
         } catch (error) {
           console.error('完成任务失败:', error);
+          // 重新抛出错误，让组件层处理
+          throw error;
         }
         return null;
       },
@@ -287,6 +289,8 @@ export const useTaskStore = create<TaskState>()(
           }
         } catch (error) {
           console.error('取消完成任务失败:', error);
+          // 重新抛出错误，让组件层处理
+          throw error;
         }
         return null;
       },
