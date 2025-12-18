@@ -90,10 +90,10 @@ tail -f scripts/frontend-dev.log
 ### 数据库管理
 ```bash
 # 打开 SQLite 数据库
-sqlite3 backend/data/starship-plan.db
+sqlite3 backend/data/starship-plan-dev.db
 
 # 运行数据库迁移
-cd backend && npx prisma migrate dev
+cd backend && DATABASE_URL="file:./data/starship-plan-dev.db" npx prisma migrate dev
 
 # 查看数据库内容
 cd backend && npx prisma studio
@@ -116,7 +116,7 @@ curl -H "Authorization: Bearer mock-token-parent" http://localhost:8000/api/task
 **后端环境变量**:
 - `NODE_ENV=development`
 - `PORT=8000`
-- `DATABASE_URL=file:$PROJECT_DIR/backend/data/starship-plan.db`
+- `DATABASE_URL=file:$PROJECT_DIR/backend/data/starship-plan-dev.db`
 - `JWT_SECRET=starship-plan-dev-secret`
 - `ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://你的局域网IP:3000`
 
@@ -165,7 +165,7 @@ cd frontend && npm install
 如果数据库连接失败：
 ```bash
 # 检查数据库文件
-ls -la backend/data/starship-plan.db
+ls -la backend/data/starship-plan-dev.db
 
 # 重新运行迁移
 cd backend && npx prisma migrate dev --name init

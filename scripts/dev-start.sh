@@ -112,7 +112,7 @@ start_backend_dev() {
     # 设置开发环境变量
     export NODE_ENV=development
     export PORT=8000
-    export DATABASE_URL="file:$PROJECT_DIR/backend/data/starship-plan.db"
+    export DATABASE_URL="file:$PROJECT_DIR/backend/data/starship-plan-dev.db"
     export JWT_SECRET="starship-plan-dev-secret"
     export ALLOWED_ORIGINS="http://localhost:3000,http://127.0.0.1:3000,http://$(get_lan_ip):3000"
 
@@ -121,7 +121,8 @@ start_backend_dev() {
 
     # 启动开发服务器（带文件监听和热重载）
     log_info "启动后端开发模式..."
-    nohup npm run dev > "$SCRIPT_DIR/backend-dev.log" 2>&1 &
+    # 使用env命令确保环境变量传递给子进程
+    nohup env NODE_ENV=development PORT=8000 DATABASE_URL="file:$PROJECT_DIR/backend/data/starship-plan-dev.db" JWT_SECRET="starship-plan-dev-secret" ALLOWED_ORIGINS="http://localhost:3000,http://127.0.0.1:3000,http://$(get_lan_ip):3000" npm run dev > "$SCRIPT_DIR/backend-dev.log" 2>&1 &
     local backend_pid=$!
     echo $backend_pid > "$BACKEND_PID_FILE"
 
@@ -236,7 +237,7 @@ show_dev_status() {
     echo -e "${CYAN}🛠️  开发工具:${NC}"
     echo -e "${CYAN}   后端日志: tail -f $SCRIPT_DIR/backend-dev.log${NC}"
     echo -e "${CYAN}   前端日志: tail -f $SCRIPT_DIR/frontend-dev.log${NC}"
-    echo -e "${CYAN}   数据库查看: sqlite3 $PROJECT_DIR/backend/data/starship-plan.db${NC}"
+    echo -e "${CYAN}   数据库查看: sqlite3 $PROJECT_DIR/backend/data/starship-plan-dev.db${NC}"
     echo -e "${CYAN}   API测试: curl -H 'Authorization: Bearer mock-token-parent' http://localhost:8000/api/tasks${NC}"
 }
 
@@ -268,8 +269,8 @@ install_deps() {
     # 运行数据库迁移（如果需要）
     log_info "检查数据库状态..."
     cd "$PROJECT_DIR/backend"
-    if [ ! -f "data/starship-plan.db" ] || [ ! -s "data/starship-plan.db" ]; then
-        npx prisma migrate dev --name init
+    if [ ! -f "data/starship-plan-dev.db" ] || [ ! -s "data/starship-plan-dev.db" ]; then
+        DATABASE_URL="file:./data/starship-plan-dev.db" npx prisma migrate dev --name init
     fi
 
     log_success "依赖安装完成"

@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,237 +7,202 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 用户表 - 支持儿童和家长角色
 model User {
-  id          String   @id @default(cuid())
-  username    String   @unique
-  displayName String?
-  avatar      String?  // 头像文件路径
-  role        String   @default("CHILD")  // CHILD, PARENT
-  parentId    String?  // 如果是儿童用户，关联家长账户
-  password    String   // 家长账户设置密码，儿童可无密码
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // 关联关系
-  parent           User?         @relation("ParentChild", fields: [parentId], references: [id])
-  children         User[]        @relation("ParentChild")
-  tasks            Task[]
-  taskCompletions  TaskCompletion[]
-  levelRecords     LevelRecord[]
+  id                String             @id @default(cuid())
+  username          String             @unique
+  displayName       String?
+  avatar            String?
+  role              String             @default("CHILD")
+  parentId          String?
+  password          String
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  levelRecords      LevelRecord[]
   pointTransactions PointTransaction[]
   punishmentRecords PunishmentRecord[]
-  settings         UserSettings[]
+  taskCompletions   TaskCompletion[]
+  tasks             Task[]
+  settings          UserSettings?
+  parent            User?              @relation("ParentChild", fields: [parentId], references: [id])
+  children          User[]             @relation("ParentChild")
 
   @@map("users")
 }
 
-// 任务表
 model Task {
-  id          String   @id @default(cuid())
+  id          String             @id @default(cuid())
   title       String
   description String?
-  type        String   @default("DAILY")     // DAILY, WEEKLY, CUSTOM
-  starCoins   Int      @default(10)
-  expReward   Int      @default(5)
-  isActive    Boolean  @default(true)
+  type        String             @default("DAILY")
+  starCoins   Int                @default(10)
+  expReward   Int                @default(5)
+  isActive    Boolean            @default(true)
   createdBy   String
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // 任务配置
-  frequency   String   @default("DAILY")      // DAILY, WEEKLY, WEEKDAYS, WEEKENDS, CUSTOM
-  weekdays    String?  // JSON格式存储周几执行 [1,2,3,4,5] 表示周一到周五
-  timeLimit   String?  // 时间限制，如 "19:00" 表示晚上7点前完成
-  category    String?  // 任务分类：学习、运动、家务等
-  difficulty  String   @default("MEDIUM")     // EASY, MEDIUM, HARD
-
-  // 关联关系
-  creator     User       @relation(fields: [createdBy], references: [id])
-  completions TaskCompletion[]
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  frequency   String             @default("DAILY")
+  weekdays    String?
+  timeLimit   String?
+  category    String?
+  difficulty  String             @default("MEDIUM")
   punishments PunishmentRecord[]
+  completions TaskCompletion[]
+  creator     User               @relation(fields: [createdBy], references: [id])
 
   @@map("tasks")
 }
 
-// 任务完成记录表
 model TaskCompletion {
-  id         String   @id @default(cuid())
-  taskId     String
-  userId     String
-  completedAt DateTime @default(now())
-  starCoins  Int      // 实际获得的星币（可能有加成）
-  expGained  Int      // 获得的经验值
-  streak     Int?     // 连续完成天数
-  bonusMultiplier Float? @default(1.0) // 加成倍数
-
-  // 关联关系
-  task Task @relation(fields: [taskId], references: [id])
-  user User @relation(fields: [userId], references: [id])
+  id              String   @id @default(cuid())
+  taskId          String
+  userId          String
+  completedAt     DateTime @default(now())
+  starCoins       Int
+  expGained       Int
+  streak          Int?
+  bonusMultiplier Float?   @default(1.0)
+  user            User     @relation(fields: [userId], references: [id])
+  task            Task     @relation(fields: [taskId], references: [id])
 
   @@unique([taskId, userId, completedAt])
   @@map("task_completions")
 }
 
-// 用户等级记录表
 model LevelRecord {
   id         String   @id @default(cuid())
   userId     String
   level      Int
-  title      String   // 等级称号：见习宇航员、初级飞行员等
-  exp        Int      // 当前经验值
-  totalExp   Int      // 总经验值
-  shipName   String   // 星舰名称
+  title      String
+  exp        Int
+  totalExp   Int
+  shipName   String
   promotedAt DateTime @default(now())
-
-  // 关联关系
-  user User @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id])
 
   @@map("level_records")
 }
 
-// 星币交易记录表
 model PointTransaction {
   id          String   @id @default(cuid())
   userId      String
-  type        String   // EARN, SPEND, PUNISHMENT, BONUS, REFUND
-  amount      Int      // 金额（正数为获得，负数为消费）
-  balance     Int      // 交易后余额
+  type        String
+  amount      Int
+  balance     Int
   description String
-  relatedId   String?  // 关联的记录ID（任务完成、惩罚记录等）
+  relatedId   String?
   createdAt   DateTime @default(now())
-
-  // 关联关系
-  user User @relation(fields: [userId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
 
   @@map("point_transactions")
 }
 
-// 奖励商品表
 model Reward {
-  id          String   @id @default(cuid())
+  id          String             @id @default(cuid())
   name        String
   description String?
-  cost        Int      // 星币价格
-  category    String   // 奖励分类：娱乐、特权、实物等
-  imageUrl    String?  // 商品图片
-  isActive    Boolean  @default(true)
-  stock       Int?     // 库存（-1表示无限）
-  createdBy   String   // 创建奖励的家长ID
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // 关联关系
+  cost        Int
+  category    String
+  imageUrl    String?
+  isActive    Boolean            @default(true)
+  stock       Int?
+  createdBy   String
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
   redemptions RewardRedemption[]
 
   @@map("rewards")
 }
 
-// 奖励兑换记录表
 model RewardRedemption {
-  id        String   @id @default(cuid())
-  rewardId  String
-  userId    String
-  status    String   @default("PENDING")  // PENDING, APPROVED, COMPLETED, REJECTED
-  cost      Int      // 消耗的星币
-  redeemedAt DateTime @default(now())
+  id          String    @id @default(cuid())
+  rewardId    String
+  userId      String
+  status      String    @default("PENDING")
+  cost        Int
+  redeemedAt  DateTime  @default(now())
   completedAt DateTime?
-  notes     String?  // 家长备注
-
-  // 关联关系
-  reward Reward @relation(fields: [rewardId], references: [id])
+  notes       String?
+  reward      Reward    @relation(fields: [rewardId], references: [id])
 
   @@map("reward_redemptions")
 }
 
-// 惩罚规则表
 model PunishmentRule {
-  id          String   @id @default(cuid())
-  name        String
-  description String
-  type        String   // DEDUCT_COINS, EXTRA_TASK, RESTRICT_PRIVILEGE
-  severity    String   // MINOR, MEDIUM, SEVERE
-  value       Int      // 惩罚力度（扣除星币数、增加任务数等）
-  isActive    Boolean  @default(true)
-  createdBy   String   // 创建惩罚的家长ID
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  // 关联关系
+  id           String             @id @default(cuid())
+  name         String
+  description  String
+  type         String
+  severity     String
+  value        Int
+  isActive     Boolean            @default(true)
+  createdBy    String
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
   applications PunishmentRecord[]
 
   @@map("punishment_rules")
 }
 
-// 惩罚执行记录表
 model PunishmentRecord {
-  id          String   @id @default(cuid())
-  userId      String
-  taskId      String?  // 相关的任务ID
-  ruleId      String?  // 对应的惩罚规则ID
-  type        String   // DEDUCT_COINS, EXTRA_TASK, RESTRICT_PRIVILEGE
-  reason      String   // 惩罚原因
-  severity    String   // MINOR, MEDIUM, SEVERE
-  value       Int      // 惩罚力度
-  status      String   @default("ACTIVE")  // ACTIVE, COMPLETED, WAIVED
-  createdAt   DateTime @default(now())
-  resolvedAt  DateTime? // 解决时间（完成补救任务等）
-  resolvedBy  String?  // 解决人（家长确认）
-
-  // 关联关系
-  user User @relation(fields: [userId], references: [id])
-  task Task? @relation(fields: [taskId], references: [id])
-  rule PunishmentRule? @relation(fields: [ruleId], references: [id])
+  id         String          @id @default(cuid())
+  userId     String
+  taskId     String?
+  ruleId     String?
+  type       String
+  reason     String
+  severity   String
+  value      Int
+  status     String          @default("ACTIVE")
+  createdAt  DateTime        @default(now())
+  resolvedAt DateTime?
+  resolvedBy String?
+  rule       PunishmentRule? @relation(fields: [ruleId], references: [id])
+  task       Task?           @relation(fields: [taskId], references: [id])
+  user       User            @relation(fields: [userId], references: [id])
 
   @@map("punishment_records")
 }
 
-// 用户设置表
 model UserSettings {
-  id              String   @id @default(cuid())
-  userId          String
-  theme           String   @default("dark") // 主题设置
-  soundEnabled    Boolean  @default(true)
-  notifications   Boolean  @default(true)
-  language        String   @default("zh-CN")
-  timezone        String   @default("Asia/Shanghai")
-  dailyReminderTime String? @default("19:00") // 每日提醒时间
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  theme             String   @default("dark")
+  soundEnabled      Boolean  @default(true)
+  notifications     Boolean  @default(true)
+  language          String   @default("zh-CN")
+  timezone          String   @default("Asia/Shanghai")
+  dailyReminderTime String?  @default("19:00")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  user              User     @relation(fields: [userId], references: [id])
 
-  // 关联关系
-  user User @relation(fields: [userId], references: [id])
-
-  @@unique([userId])
   @@map("user_settings")
 }
 
-// 系统通知表
 model Notification {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
   title     String
   content   String
-  type      String   @default("INFO")     // INFO, ACHIEVEMENT, REMINDER, REWARD, PUNISHMENT
-  isRead    Boolean  @default(false)
-  data      String?  // JSON格式的额外数据
-  createdAt DateTime @default(now())
+  type      String    @default("INFO")
+  isRead    Boolean   @default(false)
+  data      String?
+  createdAt DateTime  @default(now())
   readAt    DateTime?
 
   @@map("notifications")
 }
 
-// 数据同步记录表（用于多设备同步）
 model SyncLog {
-  id          String   @id @default(cuid())
-  userId      String
-  entityType  String   // 实体类型：task, user, reward等
-  entityId    String   // 实体ID
-  action      String   // CREATE, UPDATE, DELETE
-  data        String?  // JSON格式的变更数据
-  deviceId    String   // 操作设备ID
-  timestamp   DateTime @default(now())
-  syncStatus  String   @default("PENDING")  // PENDING, SYNCED, FAILED
+  id         String   @id @default(cuid())
+  userId     String
+  entityType String
+  entityId   String
+  action     String
+  data       String?
+  deviceId   String
+  timestamp  DateTime @default(now())
+  syncStatus String   @default("PENDING")
 
   @@map("sync_logs")
 }
