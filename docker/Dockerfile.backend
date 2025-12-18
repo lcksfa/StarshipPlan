@@ -1,0 +1,73 @@
+# StarshipPlan 后端 Dockerfile
+FROM node:20-bookworm
+
+# 安装系统依赖
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    sqlite3 \
+    curl \
+    dumb-init \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
+
+# 创建应用用户
+RUN addgroup --gid 1001 nodejs && \
+    adduser --system --uid 1001 --shell /bin/bash --ingroup nodejs starshipplan
+
+# 设置工作目录
+WORKDIR /app
+
+# 复制package.json和prisma schema
+COPY backend/package.json backend/prisma ./backend/
+
+# 切换到 backend 目录进行安装
+WORKDIR /app/backend
+
+# 清理 npm 和 prisma 缓存
+RUN npm cache clean --force && rm -rf ~/.npm
+
+# 安装依赖，强制重新获取
+RUN npm install --prefer-offline --no-audit --no-fund
+
+# 删除所有 prisma 生成的文件，强制重新生成
+RUN rm -rf node_modules/.prisma node_modules/@prisma/client
+
+# 重新生成 Prisma 客户端（在 Debian 上生成正确的二进制）
+RUN npx prisma generate --force
+
+# 构建应用
+RUN npm run build
+
+# 回到根目录
+WORKDIR /app
+
+# 创建必要的目录
+RUN mkdir -p /app/data /app/logs /app/backups
+
+# 复制构建后的应用到正确位置
+RUN cp -r backend/dist ./dist && \
+    cp -r backend/node_modules ./node_modules && \
+    cp -r backend/prisma ./prisma
+
+# 设置文件所有权
+RUN chown -R starshipplan:nodejs /app
+
+# 切换到非root用户
+USER starshipplan
+
+# 设置环境变量
+ENV NODE_ENV=production
+ENV PORT=8000
+ENV DATABASE_URL="file:/app/data/starship-plan.db"
+
+# 暴露端口
+EXPOSE 8000
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+# 启动应用
+CMD ["dumb-init", "node", "dist/server.js"]

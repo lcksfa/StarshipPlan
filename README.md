@@ -103,17 +103,42 @@ npx cap sync android
 
 ## 📱 部署方式
 
-### 本地部署（推荐）
-1. 一键安装脚本自动配置
-2. Docker 容器化部署
-3. 家庭WiFi环境运行
-4. 无需云服务器成本
+### 快速部署（推荐）
+
+**一键启动本地服务：**
+```bash
+# 启动所有服务
+./scripts/deploy-local.sh start
+
+# 查看服务状态
+./scripts/deploy-local.sh status
+
+# 停止服务
+./scripts/deploy-local.sh stop
+```
+
+**访问地址：**
+- 🌐 前端应用：http://localhost:3000
+- 🔧 后端API：http://localhost:8000  
+- 📱 局域网访问：http://192.168.1.29:3000
 
 ### 系统要求
 - Node.js 18+
 - Android 6.0+
 - 家庭WiFi网络
 - 现代浏览器支持
+
+### 详细部署指南
+
+📖 **完整部署文档：** [查看 DEPLOYMENT.md](./DEPLOYMENT.md)
+
+包含以下内容：
+- 🔧 环境准备和系统要求
+- 💻 本地开发部署详解
+- 🐳 Docker 容器部署（修复中）
+- 🛠️ 服务管理和监控
+- 🚨 故障排除和性能优化
+- 🔒 安全配置指南
 
 ## 🎯 游戏化设计
 
