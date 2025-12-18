@@ -305,6 +305,45 @@ export class TaskController {
   }
 
   /**
+   * 重置周任务进度
+   */
+  async resetWeeklyTaskProgress(req: AuthRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return errorResponse(res, '用户未认证', 401);
+      }
+
+      const { id } = req.params;
+
+      // 检查任务是否存在且为周任务
+      const existingTask = await this.taskService.getTaskById(id);
+      if (existingTask.type !== 'WEEKLY') {
+        return errorResponse(res, '只有周任务可以重置进度', 400);
+      }
+
+      // 权限检查 - 修复 createdBy -> creator
+      const creatorId = (existingTask as any).creator?.id || (existingTask as any).createdBy;
+
+      if (req.user?.role === 'CHILD') {
+        // 儿童用户只能重置家长创建的任务
+        if (creatorId !== req.user.parentId) {
+          return errorResponse(res, '无权重置此任务进度', 403);
+        }
+      } else if (req.user?.role === 'PARENT') {
+        // 家长用户只能重置自己创建的任务
+        if (creatorId !== req.user.id) {
+          return errorResponse(res, '无权重置此任务进度', 403);
+        }
+      }
+
+      const result = await this.taskService.resetWeeklyTaskProgress(id, req.user.id);
+      return successResponse(res, result, '周任务进度已重置');
+    } catch (error) {
+      return this.handleError(res, error);
+    }
+  }
+
+  /**
    * 获取任务模板
    */
   async getTaskTemplates(req: AuthRequest, res: Response) {

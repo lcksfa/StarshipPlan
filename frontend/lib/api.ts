@@ -1,16 +1,16 @@
 import { ApiResponse, PaginatedResponse, ApiError } from '../types/api';
 import { authManager } from './auth';
+import { API_CONFIG } from './api-config';
 
 // API 客户端配置
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 const DEFAULT_TIMEOUT = 10000; // 10 秒超时
 
 class ApiClient {
   private baseURL: string;
   private timeout: number;
 
-  constructor(baseURL: string = API_BASE_URL, timeout: number = DEFAULT_TIMEOUT) {
-    this.baseURL = baseURL;
+  constructor(baseURL?: string, timeout: number = DEFAULT_TIMEOUT) {
+    this.baseURL = baseURL || API_CONFIG.getApiUrl();
     this.timeout = timeout;
   }
 

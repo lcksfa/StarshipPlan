@@ -223,6 +223,17 @@ router.delete(
 );
 
 /**
+ * @route   POST /api/tasks/:id/reset-weekly-progress
+ * @desc    重置周任务进度
+ * @access  Private (CHILD or PARENT for demo)
+ */
+router.post(
+  '/:id/reset-weekly-progress',
+  authenticate,
+  asyncHandler(taskController.resetWeeklyTaskProgress.bind(taskController))
+);
+
+/**
  * @route   POST /api/tasks/batch-complete
  * @desc    批量完成任务
  * @access  Private (CHILD or PARENT for demo)

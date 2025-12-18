@@ -1,5 +1,6 @@
 import { apiClient, withErrorHandling } from '../api';
 import { SyncEvent } from '../../types/api';
+import { API_CONFIG } from '../api-config';
 
 interface SyncStatusResponse {
   isConnected: boolean;
@@ -41,7 +42,7 @@ export class SyncService {
       return; // 已连接
     }
 
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000';
+    const wsUrl = API_CONFIG.getWsUrl();
     const fullUrl = `${wsUrl}/sync/ws?userId=${userId}`;
 
     try {

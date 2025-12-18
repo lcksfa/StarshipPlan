@@ -16,17 +16,19 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Calendar, Repeat, Sparkles, Plus, Zap, Trash2 } from "lucide-react"
+import { Calendar, Repeat, Sparkles, Plus, Zap, Trash2, RotateCcw } from "lucide-react"
 import { toast } from "sonner"
 import { AddTaskDialog } from "./add-task-dialog"
 import { useTodayTasks, useWeeklyTasks, useTaskStore } from "@/store/taskStore"
 import { useCurrentUser } from "@/store/userStore"
 import { usePointsStore } from "@/store/pointsStore"
 import { Task } from "@/types/api"
+import { API_CONFIG } from "@/lib/api-config"
 
 export function TaskList() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [defaultTaskType, setDefaultTaskType] = useState<"daily" | "weekly">("daily")
+  const [resetConfirmTask, setResetConfirmTask] = useState<Task | null>(null)
 
   // 使用真实的 store 数据
   const dailyTasks = useTodayTasks()
@@ -63,6 +65,65 @@ export function TaskList() {
     } catch (error: any) {
       console.error("删除任务失败:", error)
       toast.error("删除失败，请重试")
+    }
+  }
+
+  const resetWeeklyTaskProgress = async (taskId: string) => {
+    try {
+      const task = weeklyTasks.find(t => t.id === taskId)
+      if (!task) {
+        toast.error("任务不存在")
+        return
+      }
+
+      if (task.type !== 'WEEKLY') {
+        toast.error("只有周任务可以重置进度")
+        return
+      }
+
+      // 检查是否有进度需要重置
+      if ((task.weeklyCompletedCount || 0) === 0) {
+        toast.info("该任务进度已经是0，无需重置")
+        return
+      }
+
+      // 使用状态控制确认对话框
+      setResetConfirmTask(task);
+    } catch (error: any) {
+      console.error("重置周任务进度失败:", error)
+      toast.error("重置进度失败，请重试")
+    }
+  }
+
+  const handleResetTaskProgress = async () => {
+    if (!resetConfirmTask) return
+
+    try {
+      // 调用重置进度的API
+      const response = await fetch(`${API_CONFIG.getApiUrl()}/api/tasks/${resetConfirmTask.id}/reset-weekly-progress`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer mock-token-child-1`
+        }
+      })
+
+      if (response.ok) {
+        // 刷新任务列表
+        await Promise.all([
+          fetchWeeklyTasks(),
+          ...(currentUser?.id ? [fetchUserPoints(currentUser.id)] : [])
+        ])
+        toast.success(`周任务"${resetConfirmTask.title}"进度已重置`)
+      } else {
+        const errorData = await response.json()
+        toast.error(errorData.message || "重置进度失败，请重试")
+      }
+    } catch (error: any) {
+      console.error("重置周任务进度失败:", error)
+      toast.error("重置进度失败，请重试")
+    } finally {
+      setResetConfirmTask(null)
     }
   }
 
@@ -239,12 +300,16 @@ export function TaskList() {
                     )}
                   </div>
                   <div className="flex flex-col gap-1">
-                    <Badge
-                      variant="secondary"
-                      className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 flex-shrink-0 text-xs sm:text-sm"
-                    >
-                      <Sparkles className="w-3 h-3" />+{task.starCoins}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      <div className="flex-1">
+                        <Badge
+                          variant="secondary"
+                          className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 text-xs sm:text-sm"
+                        >
+                          <Sparkles className="w-3 h-3" />+{task.starCoins}
+                        </Badge>
+                      </div>
+                    </div>
                     <Badge
                       variant="outline"
                       className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 flex items-center gap-1 flex-shrink-0 text-xs"
@@ -320,8 +385,24 @@ export function TaskList() {
               weeklyTasks.map((task) => (
                 <div
                   key={task.id}
-                  className="flex items-center gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
+                  className="relative flex items-center gap-2 sm:gap-2.5 p-2.5 sm:p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors group"
                 >
+                  {/* 周任务重置进度按钮 - 卡片右上角 */}
+                  {task.type === 'WEEKLY' && (task.weeklyCompletedCount || 0) > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        resetWeeklyTaskProgress(task.id)
+                      }}
+                      className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 hover:bg-gray-100 h-6 w-6 p-0"
+                      title="重置本周进度"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                    </Button>
+                  )}
+
                   {/* 周任务进度可视化 */}
                   {task.type === 'WEEKLY' && task.targetCount ? (
                     <div
@@ -367,12 +448,16 @@ export function TaskList() {
                     </div>
                   )}
                   <div className="flex flex-col gap-1">
-                    <Badge
-                      variant="secondary"
-                      className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 flex-shrink-0 text-xs sm:text-sm"
-                    >
-                      <Sparkles className="w-3 h-3" />+{task.starCoins}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      <div className="flex-1">
+                        <Badge
+                          variant="secondary"
+                          className="bg-accent/20 text-accent hover:bg-accent/30 flex items-center gap-1 text-xs sm:text-sm"
+                        >
+                          <Sparkles className="w-3 h-3" />+{task.starCoins}
+                        </Badge>
+                      </div>
+                    </div>
                     <Badge
                       variant="outline"
                       className="bg-blue-500/10 text-blue-600 hover:bg-blue-500/20 flex items-center gap-1 flex-shrink-0 text-xs"
@@ -416,6 +501,27 @@ export function TaskList() {
       </div>
 
       <AddTaskDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} defaultTaskType={defaultTaskType} />
+
+      {/* 重置任务进度确认对话框 */}
+      <AlertDialog open={!!resetConfirmTask} onOpenChange={(open) => !open && setResetConfirmTask(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>重置任务进度</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要重置周任务 "{resetConfirmTask?.title}" 的进度吗？此操作将删除本周所有完成记录并扣除相应奖励。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleResetTaskProgress}
+              className="bg-red-500 hover:bg-red-600"
+            >
+              重置进度
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

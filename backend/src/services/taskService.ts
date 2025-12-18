@@ -1161,4 +1161,96 @@ export class TaskService {
 
     return tasksWithCompletions;
   }
+
+  /**
+   * 重置周任务进度
+   */
+  async resetWeeklyTaskProgress(taskId: string, userId: string) {
+    // 获取当前周的开始（周一0点）和结束（周日23:59:59）
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=周日, 1=周一...
+    const startOfWeek = new Date(today);
+    const diff = today.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // 调整到周一
+    startOfWeek.setDate(diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+
+    // 验证任务存在且为周任务
+    const task = await prisma.task.findUnique({
+      where: { id: taskId },
+    });
+
+    if (!task) {
+      throw new AppError('任务不存在', 404, 'NOT_FOUND' as any);
+    }
+
+    if (task.type !== 'WEEKLY') {
+      throw new AppError('只有周任务可以重置进度', 400, 'VALIDATION_ERROR' as any);
+    }
+
+    // 查找本周内所有的完成记录
+    const completions = await prisma.taskCompletion.findMany({
+      where: {
+        taskId,
+        userId,
+        completionType: 'INCREMENT',
+        completedAt: {
+          gte: startOfWeek,
+          lte: endOfWeek,
+        },
+      },
+    });
+
+    if (completions.length === 0) {
+      return {
+        deletedCount: 0,
+        starCoinsDeducted: 0,
+        expDeducted: 0,
+        message: '该任务本周没有完成记录，无需重置',
+      };
+    }
+
+    // 计算需要扣除的总奖励
+    const totalStarCoins = completions.reduce((sum, completion) => sum + completion.starCoins, 0);
+    const totalExp = completions.reduce((sum, completion) => sum + completion.expGained, 0);
+
+    // 使用事务处理以确保数据一致性
+    const result = await prisma.$transaction(async (tx) => {
+      // 删除本周所有完成记录
+      const deletedCount = await tx.taskCompletion.deleteMany({
+        where: {
+          taskId,
+          userId,
+          completionType: 'INCREMENT',
+          completedAt: {
+            gte: startOfWeek,
+            lte: endOfWeek,
+          },
+        },
+      });
+
+      // 如果有奖励需要扣除
+      if (totalStarCoins > 0 || totalExp > 0) {
+        // 扣除用户经验值和等级
+        await this.updateUserLevel(tx, userId, -totalExp);
+
+        // 扣除用户星币余额
+        await this.updateUserPoints(tx, userId, -totalStarCoins, 'DEDUCT', `重置周任务进度: ${task.title}`);
+      }
+
+      return deletedCount;
+    });
+
+    return {
+      deletedCount: result.count,
+      starCoinsDeducted: totalStarCoins,
+      expDeducted: totalExp,
+      message: `已重置周任务"${task.title}"的本周进度，删除了 ${result.count} 条完成记录${totalStarCoins > 0 || totalExp > 0
+        ? `，扣除 ${totalStarCoins} 星币和 ${totalExp} 经验`
+        : ''}`,
+    };
+  }
 }

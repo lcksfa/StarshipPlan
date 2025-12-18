@@ -1,6 +1,7 @@
 import { indexedDBManager, STORES, StorageItem } from './indexedDB';
 import { syncManager, DataChange } from './syncManager';
 import { starshipClient } from '../services';
+import { API_CONFIG } from '../api-config';
 
 export interface OfflineRequest {
   id: string;
@@ -189,7 +190,7 @@ class OfflineManager {
    * 发送 HTTP 请求
    */
   private async sendRequest<T>(method: string, endpoint: string, data?: any): Promise<T> {
-    const url = `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${endpoint}`;
+    const url = `${API_CONFIG.getApiUrl()}${endpoint}`;
 
     const response = await fetch(url, {
       method,
